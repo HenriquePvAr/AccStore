@@ -1,7 +1,7 @@
 import { requireSupabase } from '../lib/supabaseClient'
 import { getAccountById } from './accountsService'
 import { mapOrder, mapProfile } from './mappers'
-import type { OrderPayload, OrderStatus } from './types'
+import type { GuestOrderPayload, OrderPayload, OrderStatus } from './types'
 import { getCurrentUserProfile } from './usersService'
 
 function generateOrderCode() {
@@ -11,7 +11,11 @@ function generateOrderCode() {
 async function attachOrderRelations(rows: Record<string, unknown>[]) {
   const supabase = requireSupabase()
   const profileIds = [
-    ...new Set(rows.flatMap((row) => [String(row.buyer_id), String(row.seller_id)]).filter(Boolean)),
+    ...new Set(
+      rows
+        .flatMap((row) => [row.buyer_id, row.seller_id])
+        .filter((value): value is string => typeof value === 'string' && value.length > 0),
+    ),
   ]
 
   const profilesResult = profileIds.length
@@ -130,6 +134,43 @@ export async function createOrder(payload: OrderPayload) {
   }
 
   const [order] = await attachOrderRelations([data])
+  return order
+}
+
+export async function createGuestOrder(payload: GuestOrderPayload) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('create_guest_order', {
+    p_account_id: payload.accountId,
+    p_guest_name: payload.name.trim(),
+    p_guest_whatsapp: payload.whatsapp.trim(),
+    p_guest_email: payload.email?.trim() || null,
+  })
+
+  if (error) {
+    throw error
+  }
+
+  const [order] = await attachOrderRelations([data as Record<string, unknown>])
+  return order
+}
+
+export async function getGuestOrderByToken(token: string) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('get_guest_order_by_token', {
+    p_token: token,
+  })
+
+  if (error) {
+    throw error
+  }
+
+  const rows = (data ?? []) as Record<string, unknown>[]
+
+  if (rows.length === 0) {
+    throw new Error('Pedido não encontrado ou link expirado.')
+  }
+
+  const [order] = await attachOrderRelations([rows[0]])
   return order
 }
 

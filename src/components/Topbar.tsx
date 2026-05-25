@@ -8,14 +8,14 @@ interface TopbarProps {
   activeView: AppView
   cartCount: number
   onNavigate: (view: AppView) => void
-  onSection: (sectionId: string) => void
 }
 
 const links = [
+  { label: 'Home', action: 'home' },
   { label: 'Explorar', action: 'explore' },
 ] as const
 
-export function Topbar({ activeView, cartCount, onNavigate, onSection }: TopbarProps) {
+export function Topbar({ activeView, cartCount, onNavigate }: TopbarProps) {
   const { user } = useAuth()
   const sellActionView: AppView = user?.role === 'admin' ? 'adminListings' : user?.role === 'seller' ? 'sellerListings' : 'sell'
   const sellActionLabel = user?.role === 'admin' ? 'Anúncios' : user?.role === 'seller' ? 'Meus anúncios' : 'Vender conta'
@@ -24,27 +24,27 @@ export function Topbar({ activeView, cartCount, onNavigate, onSection }: TopbarP
   return (
     <header className="sticky top-0 z-20 border-b border-[rgba(120,140,255,0.16)] bg-[#070B16]/88 backdrop-blur-2xl">
       <div className="mx-auto flex h-14 max-w-[1680px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-7">
-        <button type="button" className="flex shrink-0 items-center" onClick={() => onNavigate('home')}>
+        <button type="button" className="flex shrink-0 items-center gap-2" onClick={() => onNavigate('home')}>
           <img
             src="/assets/accstore/logo-icon.png"
-            alt="ACCSTORE"
+            alt="ACC Story"
             className="h-8 w-8 rounded-md object-cover sm:hidden"
           />
-          <img
-            src="/assets/accstore/logo-horizontal.png"
-            alt="ACCSTORE"
-            className="hidden h-8 w-[158px] object-contain object-left mix-blend-screen sm:block lg:w-[178px]"
-          />
+          <span className="hidden text-lg font-black text-white sm:inline-flex">
+            ACC<span className="bg-gradient-to-r from-[#38BDF8] via-[#1463FF] to-[#53FF8F] bg-clip-text text-transparent"> Story</span>
+          </span>
         </button>
 
         <nav className="hidden h-full items-center gap-7 lg:flex">
           {links.map((link) => {
-            const active = link.action === 'explore' && (activeView === 'explore' || activeView === 'details')
+            const active =
+              (link.action === 'home' && activeView === 'home') ||
+              (link.action === 'explore' && (activeView === 'explore' || activeView === 'details'))
             return (
               <button
                 key={link.label}
                 type="button"
-                onClick={() => (link.action === 'explore' ? onNavigate('explore') : onSection(link.action))}
+                onClick={() => onNavigate(link.action)}
                 className={cn(
                   'group relative h-full text-[13px] font-semibold text-slate-300 transition hover:text-white',
                   active && 'text-white',
@@ -72,30 +72,34 @@ export function Topbar({ activeView, cartCount, onNavigate, onSection }: TopbarP
             {sellActionLabel}
           </button>
 
-          <button
-            type="button"
-            onClick={() => onNavigate('messages')}
-            className="relative inline-flex size-9 items-center justify-center rounded-lg border border-[rgba(120,140,255,0.18)] bg-[#101827]/35 text-slate-200 transition hover:border-[#1463FF]/60 hover:text-white"
-            title="Mensagens"
-          >
-            <MessageCircle aria-hidden="true" className="size-[18px]" />
-          </button>
+          {user ? (
+            <button
+              type="button"
+              onClick={() => onNavigate('messages')}
+              className="relative inline-flex size-9 items-center justify-center rounded-lg border border-[rgba(120,140,255,0.18)] bg-[#101827]/35 text-slate-200 transition hover:border-[#1463FF]/60 hover:text-white"
+              title="Mensagens"
+            >
+              <MessageCircle aria-hidden="true" className="size-[18px]" />
+            </button>
+          ) : null}
 
           <UserMenu />
 
-          <button
-            type="button"
-            onClick={() => onNavigate(cartActionView)}
-            className="relative inline-flex size-9 items-center justify-center rounded-lg border border-[rgba(120,140,255,0.18)] bg-[#101827]/35 text-slate-200 transition hover:border-[#1463FF]/60 hover:text-white"
-            title="Carrinho"
-          >
-            <ShoppingCart aria-hidden="true" className="size-[18px]" />
-            {cartCount > 0 ? (
-              <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-[#1463FF] text-xs font-black text-white">
-                {cartCount}
-              </span>
-            ) : null}
-          </button>
+          {user ? (
+            <button
+              type="button"
+              onClick={() => onNavigate(cartActionView)}
+              className="relative inline-flex size-9 items-center justify-center rounded-lg border border-[rgba(120,140,255,0.18)] bg-[#101827]/35 text-slate-200 transition hover:border-[#1463FF]/60 hover:text-white"
+              title="Carrinho"
+            >
+              <ShoppingCart aria-hidden="true" className="size-[18px]" />
+              {cartCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-[#1463FF] text-xs font-black text-white">
+                  {cartCount}
+                </span>
+              ) : null}
+            </button>
+          ) : null}
         </div>
       </div>
     </header>

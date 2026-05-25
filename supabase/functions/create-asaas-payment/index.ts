@@ -9,12 +9,18 @@ const corsHeaders = {
 
 type OrderRow = {
   id: string
-  buyer_id: string
+  buyer_id?: string | null
   seller_id: string
   account_id: string
   order_code: string
   amount: number
   payment_status: string
+  is_guest?: boolean | null
+  guest_name?: string | null
+  guest_whatsapp?: string | null
+  guest_email?: string | null
+  guest_token?: string | null
+  guest_token_expires_at?: string | null
   payment_provider?: string | null
   payment_provider_id?: string | null
   payment_url?: string | null
@@ -70,6 +76,10 @@ function stripDataImagePrefix(encodedImage?: string | null) {
   return dataImageMatch?.[1] ?? encodedImage
 }
 
+function normalizeWhatsapp(value?: string | null) {
+  return (value ?? '').replace(/\D/g, '')
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -81,11 +91,7 @@ serve(async (req) => {
 
   try {
     const authorization = req.headers.get('Authorization')
-    if (!authorization) {
-      return json({ error: 'Login necessario para gerar pagamento.' }, 401)
-    }
-
-    const { orderId } = await req.json()
+    const { orderId, guestToken } = await req.json()
     if (!orderId || typeof orderId !== 'string') {
       return json({ error: 'Pedido invalido.' }, 400)
     }
@@ -96,29 +102,33 @@ serve(async (req) => {
     const asaasApiKey = requireEnv('ASAAS_API_KEY')
     const asaasBaseUrl = normalizeAsaasBaseUrl(requireEnv('ASAAS_BASE_URL'))
 
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authorization } },
-    })
+    const userClient = authorization
+      ? createClient(supabaseUrl, supabaseAnonKey, {
+          global: { headers: { Authorization: authorization } },
+        })
+      : null
     const serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey)
 
-    const { data: authData, error: authError } = await userClient.auth.getUser()
-    if (authError || !authData.user) {
+    const authData = userClient ? (await userClient.auth.getUser()).data : { user: null }
+
+    if (authorization && !authData.user) {
       return json({ error: 'Login necessario para gerar pagamento.' }, 401)
     }
 
-    const { data: currentProfile, error: profileError } = await serviceClient
-      .from('profiles')
-      .select('role')
-      .eq('id', authData.user.id)
-      .maybeSingle<{ role: string | null }>()
+    const { data: currentProfile, error: profileError } = authData.user
+      ? await serviceClient
+          .from('profiles')
+          .select('role')
+          .eq('id', authData.user.id)
+          .maybeSingle<{ role: string | null }>()
+      : { data: null, error: null }
 
-    if (profileError) {
-      throw profileError
-    }
+    if (profileError) throw profileError
 
     const isAdmin = currentProfile?.role === 'admin'
 
-    const { data: order, error: orderError } = await userClient
+    const orderClient = userClient ?? serviceClient
+    const { data: order, error: orderError } = await orderClient
       .from('orders')
       .select(`
         id,
@@ -128,6 +138,12 @@ serve(async (req) => {
         order_code,
         amount,
         payment_status,
+        is_guest,
+        guest_name,
+        guest_whatsapp,
+        guest_email,
+        guest_token,
+        guest_token_expires_at,
         payment_provider,
         payment_provider_id,
         payment_url,
@@ -142,8 +158,22 @@ serve(async (req) => {
       return json({ error: 'Pedido nao encontrado.' }, 404)
     }
 
-    if (order.buyer_id !== authData.user.id && !isAdmin) {
-      return json({ error: 'Somente o comprador ou um administrador autorizado pode gerar o pagamento deste pedido.' }, 403)
+    if (order.is_guest) {
+      if (!guestToken || guestToken !== order.guest_token) {
+        return json({ error: 'Link de acompanhamento invalido.' }, 403)
+      }
+
+      if (order.guest_token_expires_at && new Date(order.guest_token_expires_at).getTime() <= Date.now()) {
+        return json({ error: 'Link de acompanhamento expirado.' }, 403)
+      }
+    } else {
+      if (!authData.user) {
+        return json({ error: 'Login necessario para gerar pagamento.' }, 401)
+      }
+
+      if (order.buyer_id !== authData.user.id && !isAdmin) {
+        return json({ error: 'Somente o comprador ou um administrador autorizado pode gerar o pagamento deste pedido.' }, 403)
+      }
     }
 
     const existingPixQrCode = stripDataImagePrefix(order.pix_qr_code)
@@ -239,8 +269,11 @@ serve(async (req) => {
     const customer = await asaasRequest<{ id: string }>('/customers', {
       method: 'POST',
       body: JSON.stringify({
-        name: authData.user.user_metadata?.full_name || authData.user.email || 'Cliente ACCSTORE',
-        email: authData.user.email,
+        name: order.is_guest
+          ? order.guest_name || 'Cliente ACCSTORE'
+          : authData.user?.user_metadata?.full_name || authData.user?.email || 'Cliente ACCSTORE',
+        email: order.is_guest ? order.guest_email || undefined : authData.user?.email,
+        mobilePhone: order.is_guest ? normalizeWhatsapp(order.guest_whatsapp) || undefined : undefined,
       }),
     })
 

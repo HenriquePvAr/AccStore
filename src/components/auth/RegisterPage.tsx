@@ -1,6 +1,6 @@
-import { CheckCircle2, LockKeyhole, Mail, UserRound } from 'lucide-react'
+import { CheckCircle2, Eye, EyeOff, LockKeyhole, Mail, UserRound } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { AuthScreen } from './LoginPage'
@@ -13,6 +13,8 @@ export function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const { register } = useAuth()
   const navigate = useNavigate()
 
@@ -71,13 +73,31 @@ export function RegisterPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <AuthInput icon={UserRound} label="Nome completo" value={name} onChange={setName} />
         <AuthInput icon={Mail} label="E-mail" value={email} onChange={setEmail} type="email" />
-        <AuthInput icon={LockKeyhole} label="Senha" value={password} onChange={setPassword} type="password" />
+        <AuthInput
+          icon={LockKeyhole}
+          label="Senha"
+          value={password}
+          onChange={setPassword}
+          type={showPassword ? 'text' : 'password'}
+          trailing={
+            <PasswordToggle
+              visible={showPassword}
+              onClick={() => setShowPassword((current) => !current)}
+            />
+          }
+        />
         <AuthInput
           icon={LockKeyhole}
           label="Confirmar senha"
           value={confirmPassword}
           onChange={setConfirmPassword}
-          type="password"
+          type={showConfirmPassword ? 'text' : 'password'}
+          trailing={
+            <PasswordToggle
+              visible={showConfirmPassword}
+              onClick={() => setShowConfirmPassword((current) => !current)}
+            />
+          }
         />
 
         {error ? (
@@ -124,10 +144,11 @@ interface AuthInputProps {
   label: string
   value: string
   type?: string
+  trailing?: ReactNode
   onChange: (value: string) => void
 }
 
-function AuthInput({ icon: Icon, label, value, type = 'text', onChange }: AuthInputProps) {
+function AuthInput({ icon: Icon, label, value, type = 'text', trailing, onChange }: AuthInputProps) {
   return (
     <label className="block">
       <span className="mb-2 block text-xs font-black uppercase tracking-[0.06em] text-slate-400">{label}</span>
@@ -140,7 +161,22 @@ function AuthInput({ icon: Icon, label, value, type = 'text', onChange }: AuthIn
           required
           className="min-w-0 flex-1 border-0 bg-transparent px-3 text-sm font-semibold text-white outline-none placeholder:text-slate-500"
         />
+        {trailing}
       </span>
     </label>
+  )
+}
+
+function PasswordToggle({ visible, onClick }: { visible: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
+      title={visible ? 'Ocultar senha' : 'Mostrar senha'}
+      aria-label={visible ? 'Ocultar senha' : 'Mostrar senha'}
+    >
+      {visible ? <EyeOff aria-hidden="true" className="size-4" /> : <Eye aria-hidden="true" className="size-4" />}
+    </button>
   )
 }

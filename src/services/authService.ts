@@ -143,6 +143,17 @@ export async function updateMyPassword(newPassword: string) {
   }
 }
 
+export async function sendPasswordResetEmail(email: string, redirectTo: string) {
+  const supabase = requireSupabase()
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo,
+  })
+
+  if (error) {
+    throw friendlyAuthError(error)
+  }
+}
+
 export async function getSession() {
   const supabase = requireSupabase()
   const { data, error } = await supabase.auth.getSession()

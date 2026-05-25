@@ -1,12 +1,14 @@
 import { requireSupabase } from '../lib/supabaseClient'
 import { mapProfile, mapSellProposal, mapSellProposalMedia, toSellProposalRow } from './mappers'
-import type { CounterOfferPayload, SellProposalPayload, ProposalStatus } from './types'
+import type { CounterOfferPayload, GuestSellProposalPayload, SellProposalPayload, ProposalStatus } from './types'
 import { getCurrentUserProfile } from './usersService'
 
 async function attachProposalRelations(rows: Record<string, unknown>[]) {
   const supabase = requireSupabase()
   const proposalIds = rows.map((row) => String(row.id))
-  const customerIds = [...new Set(rows.map((row) => String(row.customer_id)).filter(Boolean))]
+  const customerIds = [
+    ...new Set(rows.map((row) => row.customer_id).filter((value): value is string => typeof value === 'string' && value.length > 0)),
+  ]
 
   const [mediaResult, customersResult] = await Promise.all([
     proposalIds.length
@@ -45,6 +47,42 @@ export async function createSellProposal(payload: SellProposalPayload) {
 
   const [proposal] = await attachProposalRelations([data])
   return proposal
+}
+
+export async function createGuestSellProposal(payload: GuestSellProposalPayload) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('create_guest_sell_proposal', {
+    p_guest_name: payload.name.trim(),
+    p_guest_whatsapp: payload.whatsapp.trim(),
+    p_guest_email: payload.email?.trim() || null,
+    p_game_name: payload.gameName.trim(),
+    p_proposal_title: payload.proposalTitle.trim(),
+    p_desired_price: payload.desiredPrice,
+    p_description: payload.description.trim(),
+    p_region: payload.region?.trim() || null,
+    p_additional_info: payload.additionalInfo?.trim() || null,
+  })
+
+  if (error) {
+    throw error
+  }
+
+  const [proposal] = await attachProposalRelations([data as Record<string, unknown>])
+  return proposal
+}
+
+export async function saveGuestProposalMedia(token: string, media: Array<{ url: string; type: 'image' | 'video'; isCover?: boolean }>) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.rpc('save_guest_proposal_media', {
+    p_token: token,
+    p_media: media,
+  })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []).map(mapSellProposalMedia)
 }
 
 export async function saveProposalMedia(proposalId: string, media: Array<{ url: string; type: 'image' | 'video'; isCover?: boolean }>) {
@@ -146,6 +184,30 @@ export async function getSellProposalById(id: string) {
 
   const [proposal] = await attachProposalRelations([data])
   return proposal
+}
+
+export async function getGuestSellProposalByToken(token: string) {
+  const supabase = requireSupabase()
+  const [proposalResult, mediaResult] = await Promise.all([
+    supabase.rpc('get_guest_sell_proposal_by_token', { p_token: token }),
+    supabase.rpc('get_guest_sell_proposal_media_by_token', { p_token: token }),
+  ])
+
+  if (proposalResult.error) {
+    throw proposalResult.error
+  }
+
+  if (mediaResult.error) {
+    throw mediaResult.error
+  }
+
+  const rows = (proposalResult.data ?? []) as Record<string, unknown>[]
+
+  if (rows.length === 0) {
+    throw new Error('Proposta não encontrada ou link expirado.')
+  }
+
+  return mapSellProposal(rows[0], (mediaResult.data ?? []).map(mapSellProposalMedia))
 }
 
 export async function updateProposalStatus(id: string, status: ProposalStatus) {

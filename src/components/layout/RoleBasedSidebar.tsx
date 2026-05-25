@@ -75,9 +75,9 @@ export function RoleBasedSidebar({ activeView, onNavigate }: RoleBasedSidebarPro
   return (
     <aside className="fixed left-0 top-0 z-30 hidden h-svh w-[276px] flex-col border-r border-[rgba(120,140,255,0.18)] bg-[#070B16]/96 px-4 py-4 shadow-[16px_0_70px_rgba(0,0,0,0.34)] backdrop-blur-xl lg:flex">
       <button type="button" className="flex items-center gap-3 px-1 py-1" onClick={() => onNavigate('home')}>
-        <img src="/assets/accstore/logo-icon.png" alt="ACCSTORE" className="h-9 w-9 rounded-lg object-cover" />
+        <img src="/assets/accstore/logo-icon.png" alt="ACC Story" className="h-9 w-9 rounded-lg object-cover" />
         <span className="text-[20px] font-black text-white">
-          ACC<span className="bg-gradient-to-r from-[#38BDF8] to-[#1463FF] bg-clip-text text-transparent">STORE</span>
+          ACC<span className="bg-gradient-to-r from-[#38BDF8] via-[#1463FF] to-[#53FF8F] bg-clip-text text-transparent"> Story</span>
         </span>
       </button>
 

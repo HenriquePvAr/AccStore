@@ -1,4 +1,4 @@
-import { Eye, Handshake, Search, ShieldCheck, UserRound } from 'lucide-react'
+import { ExternalLink, Eye, Handshake, MessageCircle, Search, ShieldCheck, UserRound } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -6,6 +6,7 @@ import { useAuth } from '../../auth/AuthProvider'
 import { formatBRL, formatDateTime } from '../../lib/format'
 import { proposalStatusLabels, proposalStatusStyles } from '../../lib/proposalStatus'
 import { cn } from '../../lib/utils'
+import { formatWhatsAppDisplay, getWhatsAppUrl } from '../../lib/whatsapp'
 import { startProposalConversation } from '../../services/messagesService'
 import { getReceivedSellProposals, updateSellProposalStatus } from '../../services/proposalsService'
 import type { ProposalStatus, SellProposal } from '../../services/types'
@@ -80,6 +81,9 @@ export function ReceivedProposalsPage({ onOpenAnalysis }: ReceivedProposalsPageP
         !normalizedQuery ||
         [
           proposal.customer?.fullName,
+          proposal.guestName,
+          proposal.guestWhatsapp,
+          proposal.guestEmail,
           proposal.gameName,
           proposal.proposalTitle,
           proposal.category,
@@ -110,6 +114,13 @@ export function ReceivedProposalsPage({ onOpenAnalysis }: ReceivedProposalsPageP
   const negotiateProposal = async (proposalId: string) => {
     if (user?.role !== 'seller' && user?.role !== 'admin') {
       setActionError('Você não tem permissão para abrir negociação.')
+      return
+    }
+
+    const proposal = proposals.find((item) => item.id === proposalId)
+
+    if (proposal?.isGuest) {
+      setActionError('Use o WhatsApp informado para falar com este cliente.')
       return
     }
 
@@ -150,7 +161,7 @@ export function ReceivedProposalsPage({ onOpenAnalysis }: ReceivedProposalsPageP
           />
           <ProposalPreviewPanel
             proposal={selectedProposal}
-            canNegotiate={user?.role === 'seller' || user?.role === 'admin'}
+            canNegotiate={Boolean(selectedProposal && !selectedProposal.isGuest && (user?.role === 'seller' || user?.role === 'admin'))}
             negotiating={Boolean(selectedProposal && negotiatingId === selectedProposal.id)}
             onOpenAnalysis={onOpenAnalysis}
             onChangeStatus={changeStatus}
@@ -220,7 +231,7 @@ function ProposalListItem({ proposal, selected, onSelect }: { proposal: SellProp
       <span className="min-w-0 flex-1">
         <span className="flex items-start justify-between gap-3">
           <span className="min-w-0">
-            <span className="block truncate text-sm font-black text-white">{proposal.customer?.fullName ?? 'Cliente'}</span>
+            <span className="block truncate text-sm font-black text-white">{proposal.customer?.fullName ?? proposal.guestName ?? 'Cliente'}</span>
             <span className="mt-1 block truncate text-xs font-semibold text-slate-400">{proposal.gameName}</span>
           </span>
           <ProposalStatusBadge status={proposal.status} compact />
@@ -255,6 +266,8 @@ function ProposalPreviewPanel({
   }
 
   const mediaCount = proposal.media.length
+  const customerName = proposal.customer?.fullName ?? proposal.guestName ?? 'Cliente'
+  const whatsappUrl = proposal.guestWhatsapp ? getWhatsAppUrl(proposal.guestWhatsapp) : null
 
   return (
     <section className="acc-surface p-5">
@@ -269,7 +282,9 @@ function ProposalPreviewPanel({
       <h2 className="mt-5 text-2xl font-black text-white">{proposal.proposalTitle}</h2>
 
       <div className="mt-5 grid gap-3 border-b border-[rgba(120,140,255,0.14)] pb-5 md:grid-cols-4">
-        <InfoBlock icon={UserRound} label="Cliente" value={proposal.customer?.fullName ?? 'Cliente'} />
+        <InfoBlock icon={UserRound} label="Cliente" value={customerName} />
+        {proposal.guestWhatsapp ? <InfoBlock label="WhatsApp" value={formatWhatsAppDisplay(proposal.guestWhatsapp)} /> : null}
+        {proposal.guestEmail ? <InfoBlock label="E-mail" value={proposal.guestEmail} /> : null}
         <InfoBlock label="Jogo" value={proposal.gameName} />
         <InfoBlock label="Categoria" value={proposal.category} />
         <InfoBlock label="Preço desejado" value={formatBRL(proposal.desiredPrice)} highlight />
@@ -305,16 +320,30 @@ function ProposalPreviewPanel({
             <Eye aria-hidden="true" className="size-4" />
             Ver detalhes
           </button>
-          <button
-            type="button"
-            onClick={() => void onNegotiate(proposal.id)}
-            disabled={!canNegotiate || negotiating}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#1463FF] px-4 text-sm font-black text-white transition hover:bg-[#1D74FF] disabled:cursor-not-allowed disabled:opacity-55"
-            title={canNegotiate ? 'Negociar com o cliente' : 'Apenas vendedores e administradores podem negociar'}
-          >
-            <Handshake aria-hidden="true" className="size-4" />
-            {negotiating ? 'Abrindo...' : 'Negociar'}
-          </button>
+          {whatsappUrl ? (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-emerald-400/24 bg-emerald-500/10 px-4 text-sm font-black text-emerald-100 transition hover:border-emerald-300"
+            >
+              <MessageCircle aria-hidden="true" className="size-4" />
+              Chamar no WhatsApp
+              <ExternalLink aria-hidden="true" className="size-4" />
+            </a>
+          ) : null}
+          {!proposal.isGuest ? (
+            <button
+              type="button"
+              onClick={() => void onNegotiate(proposal.id)}
+              disabled={!canNegotiate || negotiating}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#1463FF] px-4 text-sm font-black text-white transition hover:bg-[#1D74FF] disabled:cursor-not-allowed disabled:opacity-55"
+              title={canNegotiate ? 'Negociar com o cliente' : 'Apenas vendedores e administradores podem negociar'}
+            >
+              <Handshake aria-hidden="true" className="size-4" />
+              {negotiating ? 'Abrindo...' : 'Negociar'}
+            </button>
+          ) : null}
           <button type="button" onClick={() => void onChangeStatus(proposal.id, 'rejected')} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-rose-400/40 px-4 text-sm font-black text-rose-200 transition hover:bg-rose-500/10">
             Recusar
           </button>

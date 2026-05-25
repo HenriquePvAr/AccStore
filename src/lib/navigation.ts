@@ -8,6 +8,8 @@ export type AppView =
   | 'support'
   | 'supportNew'
   | 'supportDetails'
+  | 'guestOrderTracking'
+  | 'guestProposalTracking'
   | 'orders'
   | 'sell'
   | 'myProposals'

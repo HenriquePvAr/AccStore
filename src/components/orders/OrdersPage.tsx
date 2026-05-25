@@ -1,8 +1,9 @@
-import { BadgeCheck, ClipboardCheck, ClipboardList, Copy, RotateCcw, Search, ShieldCheck } from 'lucide-react'
+import { BadgeCheck, ClipboardCheck, ClipboardList, Copy, ExternalLink, MessageCircle, RotateCcw, Search, ShieldCheck } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../auth/AuthProvider'
 import { formatBRL, formatDateTime } from '../../lib/format'
 import { cn } from '../../lib/utils'
+import { formatWhatsAppDisplay, getWhatsAppUrl } from '../../lib/whatsapp'
 import { getAllOrders, getSellerOrders, getUserOrders } from '../../services/ordersService'
 import type { DeliveryStatus, Order, OrderStatus, PaymentStatus } from '../../services/types'
 
@@ -107,6 +108,9 @@ export function OrdersPage() {
           order.account?.title,
           order.seller?.fullName,
           order.buyer?.fullName,
+          order.guestName,
+          order.guestWhatsapp,
+          order.guestEmail,
           paymentLabels[order.paymentStatus],
           deliveryLabels[order.deliveryStatus],
           statusLabels[order.status],
@@ -230,7 +234,9 @@ function PageHeader() {
 
 function OrderCard({ order }: { order: Order }) {
   const thumbnail = order.account?.coverMediaUrl || order.account?.media.find((item) => item.isCover)?.url || order.account?.media[0]?.url
-  const otherParty = order.buyer?.fullName && order.seller?.fullName ? `${order.buyer.fullName} / ${order.seller.fullName}` : order.seller?.fullName || order.buyer?.fullName || 'Usuário'
+  const buyerName = order.isGuest ? order.guestName || 'Cliente sem cadastro' : order.buyer?.fullName || 'Cliente'
+  const otherParty = order.seller?.fullName ? `${buyerName} / ${order.seller.fullName}` : buyerName
+  const whatsappUrl = order.guestWhatsapp ? getWhatsAppUrl(order.guestWhatsapp) : null
 
   return (
     <article className="p-4 transition hover:bg-[#101827]/62">
@@ -259,10 +265,28 @@ function OrderCard({ order }: { order: Order }) {
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <div className="rounded-lg border border-[rgba(120,140,255,0.12)] bg-[#070B16]/38 p-3">
           <p className="text-xs font-black uppercase tracking-[0.04em] text-slate-500">Participantes</p>
-          <div className="mt-2 flex items-center gap-2.5">
+          <div className="mt-2 flex flex-wrap items-center gap-2.5">
             <span className="text-sm font-semibold text-slate-200">{otherParty}</span>
             <ShieldCheck aria-hidden="true" className="size-4 text-blue-300" />
           </div>
+          {order.isGuest ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-400">
+              {order.guestWhatsapp ? <span>{formatWhatsAppDisplay(order.guestWhatsapp)}</span> : null}
+              {order.guestEmail ? <span>{order.guestEmail}</span> : null}
+              {whatsappUrl ? (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-emerald-400/24 bg-emerald-500/10 px-2.5 text-xs font-black text-emerald-100 transition hover:border-emerald-300"
+                >
+                  <MessageCircle aria-hidden="true" className="size-3.5" />
+                  Chamar no WhatsApp
+                  <ExternalLink aria-hidden="true" className="size-3.5" />
+                </a>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div className="rounded-lg border border-[rgba(120,140,255,0.12)] bg-[#070B16]/38 p-3">

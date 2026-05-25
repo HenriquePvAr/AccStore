@@ -1,0 +1,519 @@
+import {
+  BadgeCheck,
+  ChevronRight,
+  Filter,
+  Gamepad2,
+  MessageCircle,
+  ShieldCheck,
+  ShoppingBag,
+  Smartphone,
+  Sparkles,
+  Store,
+  Tags,
+  Trophy,
+  Zap,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
+import { useMemo, useRef, type ReactNode } from 'react'
+import type { AppView } from '../../lib/navigation'
+import { formatBRL } from '../../lib/format'
+import { cn } from '../../lib/utils'
+import { getWhatsAppUrl } from '../../lib/whatsapp'
+import type { Account } from '../../services/types'
+
+interface HomePageProps {
+  featuredAccounts: Account[]
+  loading?: boolean
+  onOpenAccount: (account: Account) => void
+  onNavigate: (view: AppView) => void
+}
+
+const heroTags = ['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Conta veterana', 'Vendedor verificado']
+
+const featuredFallbackImages = [
+  '/assets/accstore/card-rare.png',
+  '/assets/accstore/card-complete.png',
+  '/assets/accstore/card-advanced.png',
+  '/assets/accstore/card-balanced.png',
+]
+
+const trustCards: Array<{ icon: LucideIcon; title: string; description: string }> = [
+  { icon: ShieldCheck, title: 'Vendedores verificados', description: 'Mais confiança para negociar contas e tirar dúvidas antes da compra.' },
+  { icon: Tags, title: 'Categorias claras', description: 'Encontre contas por perfil, preço, itens, passe e tipo de evolução.' },
+  { icon: Filter, title: 'Filtros úteis', description: 'Explore por preço, itens raros, patente, região e contas mais recentes.' },
+  { icon: Zap, title: 'Atendimento rápido', description: 'Fluxos simples para comprar, vender e falar com a equipe quando precisar.' },
+  { icon: Smartphone, title: 'Perfeito no celular', description: 'Interface direta para navegar, comparar e pedir suporte pelo WhatsApp.' },
+  { icon: Gamepad2, title: 'Foco gamer', description: 'Uma experiência pensada para contas de Free Fire e outros jogos.' },
+]
+
+const categories = ['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Contas veteranas', 'Patentes altas', 'Ofertas recentes']
+
+const steps: Array<{ icon: LucideIcon; title: string; text: string }> = [
+  { icon: ShoppingBag, title: 'Escolha sua conta', text: 'Veja detalhes como itens, passes, patente, preço e vendedor.' },
+  { icon: MessageCircle, title: 'Fale com o vendedor', text: 'Tire dúvidas e combine a compra de forma simples.' },
+  { icon: ShieldCheck, title: 'Receba com segurança', text: 'Finalize a negociação com mais confiança e praticidade.' },
+]
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 26 },
+  visible: { opacity: 1, y: 0 },
+}
+
+export function HomePage({ featuredAccounts, loading = false, onOpenAccount, onNavigate }: HomePageProps) {
+  const supportWhatsapp = typeof import.meta.env.VITE_PUBLIC_WHATSAPP === 'string' ? import.meta.env.VITE_PUBLIC_WHATSAPP : ''
+  const supportWhatsappUrl = supportWhatsapp ? getWhatsAppUrl(supportWhatsapp) : null
+  const featured = useMemo(() => featuredAccounts.slice(0, 4), [featuredAccounts])
+
+  return (
+    <div className="overflow-hidden">
+      <HeroSection onNavigate={onNavigate} />
+      <FeaturedAccountsSection
+        accounts={featured}
+        loading={loading}
+        supportWhatsappUrl={supportWhatsappUrl}
+        onOpenAccount={onOpenAccount}
+        onNavigate={onNavigate}
+      />
+      <HowItWorksSection />
+      <TrustSection />
+      <CategoriesSection onNavigate={onNavigate} />
+      <FinalCta onNavigate={onNavigate} />
+    </div>
+  )
+}
+
+function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
+  return (
+    <section className="relative min-h-[calc(100svh-4rem)] overflow-hidden py-10 sm:py-14 lg:py-18">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(20,149,255,0.2),transparent_30%),radial-gradient(circle_at_82%_20%,rgba(139,92,246,0.18),transparent_34%),radial-gradient(circle_at_62%_82%,rgba(34,197,94,0.12),transparent_30%)]" />
+      <div className="absolute inset-0 bg-grid-fade bg-[length:44px_44px] opacity-[0.08]" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#05070F] to-transparent" />
+
+      <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1fr)]">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          transition={{ duration: 0.7, ease: 'easeOut' }}
+          className="max-w-3xl"
+        >
+          <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-[0.12em] text-blue-200">
+            <Sparkles aria-hidden="true" className="size-3.5" />
+            Marketplace gamer premium
+          </span>
+          <h1 className="mt-5 max-w-4xl text-[42px] font-black leading-[0.98] tracking-normal text-white sm:text-[64px] lg:text-[78px]">
+            Sua próxima conta está aqui
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+            Encontre contas com itens raros, passes antigos, armas evolutivas e muito mais.
+          </p>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => onNavigate('explore')}
+              className="acc-button-primary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5"
+            >
+              Explorar contas
+              <ChevronRight aria-hidden="true" className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate('sell')}
+              className="acc-button-secondary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5"
+            >
+              <Store aria-hidden="true" className="size-4" />
+              Quero vender minha conta
+            </button>
+          </div>
+
+          <div className="mt-8 grid max-w-xl grid-cols-3 gap-3">
+            <MiniMetric value="4+" label="perfis de conta" />
+            <MiniMetric value="Pix" label="pagamento claro" />
+            <MiniMetric value="24h" label="suporte ágil" />
+          </div>
+        </motion.div>
+
+        <HeroAccountShowcase />
+      </div>
+    </section>
+  )
+}
+
+function HeroAccountShowcase() {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const reducedMotion = useReducedMotion()
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start 70%', 'end 20%'],
+  })
+  const cardY = useTransform(scrollYProgress, [0, 1], reducedMotion ? [0, 0] : [32, -12])
+  const cardScale = useTransform(scrollYProgress, [0, 0.6, 1], reducedMotion ? [1, 1, 1] : [0.94, 1, 1.03])
+  const scannerY = useTransform(scrollYProgress, [0.15, 0.95], ['-40%', '138%'])
+  const scannerOpacity = useTransform(scrollYProgress, [0, 0.18, 0.82, 1], [0, 1, 1, 0])
+  const verifiedOpacity = useTransform(scrollYProgress, [0.56, 0.82], [0, 1])
+  const verifiedScale = useTransform(scrollYProgress, [0.56, 0.82], [0.7, 1])
+
+  return (
+    <div ref={containerRef} className="relative min-h-[560px] lg:min-h-[640px]">
+      <motion.div
+        style={{ y: cardY, scale: cardScale }}
+        initial={{ opacity: 0, rotateX: 8, rotateY: -10 }}
+        animate={{ opacity: 1, rotateX: 0, rotateY: 0 }}
+        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+        className="relative mx-auto max-w-[430px] rounded-[28px] border border-blue-300/24 bg-[linear-gradient(145deg,rgba(16,24,39,0.86),rgba(7,11,22,0.96))] p-4 shadow-[0_34px_120px_rgba(20,99,255,0.22)] backdrop-blur-xl"
+      >
+        <div className="absolute -inset-px rounded-[28px] bg-[linear-gradient(120deg,rgba(56,189,248,0.24),transparent_32%,rgba(34,197,94,0.18)_72%,rgba(139,92,246,0.18))] opacity-80 blur-[1px]" />
+        <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-[#070B16]">
+          <div className="relative aspect-[4/5] overflow-hidden">
+            <img src="/assets/accstore/card-rare.png" alt="Card visual de conta Free Fire verificada" className="size-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#070B16] via-[#070B16]/18 to-transparent" />
+            <motion.div
+              style={{ y: scannerY, opacity: scannerOpacity }}
+              className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,transparent,rgba(56,189,248,0.34),transparent)]"
+            />
+            <motion.div
+              style={{ opacity: verifiedOpacity, scale: verifiedScale }}
+              className="absolute right-4 top-4 inline-flex min-h-10 items-center gap-2 rounded-full border border-emerald-300/28 bg-emerald-400/16 px-3 text-xs font-black text-emerald-100 backdrop-blur"
+            >
+              <BadgeCheck aria-hidden="true" className="size-4" />
+              Verificado
+            </motion.div>
+          </div>
+
+          <div className="space-y-4 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.12em] text-blue-300">Conta FF Verificada</p>
+                <h2 className="mt-1 text-2xl font-black text-white">Conta com perfil premium</h2>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-right">
+                <p className="text-[11px] font-bold text-slate-500">Patente</p>
+                <p className="text-sm font-black text-white">Alta</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Conta veterana'].map((tag) => (
+                <span key={tag} className="rounded-lg border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {heroTags.map((tag, index) => (
+        <motion.span
+          key={tag}
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ duration: 0.5, delay: 0.1 + index * 0.07 }}
+          className={cn(
+            'absolute hidden rounded-full border px-3 py-2 text-xs font-black shadow-[0_16px_40px_rgba(0,0,0,0.24)] backdrop-blur md:inline-flex',
+            index % 3 === 0 && 'border-blue-300/24 bg-blue-500/14 text-blue-100',
+            index % 3 === 1 && 'border-violet-300/22 bg-violet-500/12 text-violet-100',
+            index % 3 === 2 && 'border-emerald-300/22 bg-emerald-500/12 text-emerald-100',
+            [
+              'left-0 top-16',
+              'right-2 top-28',
+              'left-8 bottom-44',
+              'right-8 bottom-28',
+              'left-1/2 top-[52%] -translate-x-1/2',
+            ][index],
+          )}
+        >
+          {tag}
+        </motion.span>
+      ))}
+    </div>
+  )
+}
+
+function FeaturedAccountsSection({
+  accounts,
+  loading,
+  supportWhatsappUrl,
+  onOpenAccount,
+  onNavigate,
+}: {
+  accounts: Account[]
+  loading: boolean
+  supportWhatsappUrl: string | null
+  onOpenAccount: (account: Account) => void
+  onNavigate: (view: AppView) => void
+}) {
+  return (
+    <HomeBand id="destaques">
+      <SectionHeader
+        eyebrow="Contas em destaque"
+        title="Algumas contas para começar a explorar"
+        description="A Home mostra só uma prévia. O catálogo completo fica na página Explorar."
+        action={
+          <button type="button" onClick={() => onNavigate('explore')} className="acc-button-secondary inline-flex min-h-10 items-center gap-2 px-4 text-sm font-black transition">
+            Ver catálogo completo
+            <ChevronRight aria-hidden="true" className="size-4" />
+          </button>
+        }
+      />
+
+      {loading ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="h-[370px] animate-pulse rounded-2xl border border-white/10 bg-white/[0.04]" />
+          ))}
+        </div>
+      ) : accounts.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {accounts.map((account, index) => (
+            <FeaturedAccountCard
+              key={account.id}
+              account={account}
+              imageFallback={featuredFallbackImages[index % featuredFallbackImages.length]}
+              supportWhatsappUrl={supportWhatsappUrl}
+              onOpen={() => onOpenAccount(account)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-blue-300/24 bg-blue-500/8 p-8 text-center">
+          <h3 className="text-xl font-black text-white">As contas em destaque aparecem aqui em breve</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-400">Quando houver anúncios publicados, a Home mostra uma prévia sem virar catálogo completo.</p>
+          <button type="button" onClick={() => onNavigate('explore')} className="acc-button-primary mt-5 inline-flex min-h-11 items-center gap-2 px-5 text-sm font-black">
+            Explorar contas
+            <ChevronRight aria-hidden="true" className="size-4" />
+          </button>
+        </div>
+      )}
+    </HomeBand>
+  )
+}
+
+function FeaturedAccountCard({
+  account,
+  imageFallback,
+  supportWhatsappUrl,
+  onOpen,
+}: {
+  account: Account
+  imageFallback: string
+  supportWhatsappUrl: string | null
+  onOpen: () => void
+}) {
+  const image = account.coverMediaUrl || account.media.find((item) => item.isCover)?.url || account.media[0]?.url || imageFallback
+  const tags = [
+    account.category,
+    account.region,
+    account.seller?.verified ? 'Vendedor verificado' : 'Verificado',
+  ].filter(Boolean).slice(0, 4) as string[]
+
+  return (
+    <motion.article
+      variants={fadeUp}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ duration: 0.48, ease: 'easeOut' }}
+      whileHover={{ y: -6, scale: 1.015 }}
+      className="group overflow-hidden rounded-2xl border border-blue-300/16 bg-[linear-gradient(145deg,rgba(16,24,39,0.92),rgba(7,11,22,0.94))] shadow-[0_20px_70px_rgba(0,0,0,0.24)]"
+    >
+      <div className="relative aspect-[4/3] overflow-hidden">
+        <img src={image} alt={`Destaque ${account.title}`} className="size-full object-cover transition duration-500 group-hover:scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#070B16] via-transparent to-black/20" />
+        <span className="absolute left-3 top-3 rounded-full border border-emerald-300/22 bg-emerald-500/14 px-3 py-1.5 text-xs font-black text-emerald-100 backdrop-blur">
+          Disponível
+        </span>
+      </div>
+
+      <div className="space-y-4 p-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-blue-300">{account.gameName || 'Free Fire'}</p>
+          <h3 className="mt-1 line-clamp-2 min-h-12 text-lg font-black leading-6 text-white">{account.title}</h3>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <span key={tag} className="rounded-full border border-white/10 bg-white/[0.045] px-2.5 py-1 text-[11px] font-black text-slate-300">
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        <div className="flex items-end justify-between gap-3 border-t border-white/10 pt-4">
+          <div>
+            <p className="text-xs font-bold text-slate-500">Preço</p>
+            <p className="acc-money text-2xl font-black text-white">{formatBRL(account.price)}</p>
+          </div>
+          <div className="flex gap-2">
+            {supportWhatsappUrl ? (
+              <a
+                href={supportWhatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-10 items-center justify-center rounded-full border border-emerald-300/24 bg-emerald-500/10 px-3 text-xs font-black text-emerald-100 transition hover:border-emerald-300"
+              >
+                WhatsApp
+              </a>
+            ) : null}
+            <button type="button" onClick={onOpen} className="acc-button-primary inline-flex min-h-10 items-center px-4 text-xs font-black transition">
+              Ver detalhes
+            </button>
+          </div>
+        </div>
+      </div>
+    </motion.article>
+  )
+}
+
+function HowItWorksSection() {
+  return (
+    <HomeBand>
+      <SectionHeader eyebrow="Como funciona" title="Compra simples, com contexto claro" description="Três passos para sair da vitrine e seguir para a negociação com mais confiança." />
+      <div className="relative grid gap-4 lg:grid-cols-3">
+        <div className="absolute left-[16%] right-[16%] top-10 hidden h-px bg-gradient-to-r from-transparent via-blue-300/30 to-transparent lg:block" />
+        {steps.map((step, index) => (
+          <motion.article
+            key={step.title}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            className="relative rounded-2xl border border-blue-300/16 bg-white/[0.035] p-5 backdrop-blur"
+          >
+            <span className="flex size-14 items-center justify-center rounded-2xl border border-blue-300/25 bg-blue-500/12 text-blue-200 shadow-[0_0_30px_rgba(20,149,255,0.12)]">
+              <step.icon aria-hidden="true" className="size-6" />
+            </span>
+            <span className="mt-5 block text-sm font-black text-blue-300">0{index + 1}</span>
+            <h3 className="mt-2 text-xl font-black text-white">{step.title}</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-400">{step.text}</p>
+          </motion.article>
+        ))}
+      </div>
+    </HomeBand>
+  )
+}
+
+function TrustSection() {
+  return (
+    <HomeBand>
+      <SectionHeader eyebrow="Por que usar a ACC Story?" title="Confiança sem perder o visual gamer" description="A experiência foi pensada para comprar, comparar e vender contas sem bagunça." />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {trustCards.map((card, index) => (
+          <motion.article
+            key={card.title}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.25 }}
+            transition={{ duration: 0.45, delay: index * 0.04 }}
+            className="group rounded-2xl border border-blue-300/14 bg-[linear-gradient(145deg,rgba(16,24,39,0.72),rgba(7,11,22,0.8))] p-5 transition hover:border-blue-300/34 hover:bg-blue-500/8"
+          >
+            <span className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.045] text-blue-200 transition group-hover:text-emerald-200">
+              <card.icon aria-hidden="true" className="size-5" />
+            </span>
+            <h3 className="mt-4 text-lg font-black text-white">{card.title}</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-400">{card.description}</p>
+          </motion.article>
+        ))}
+      </div>
+    </HomeBand>
+  )
+}
+
+function CategoriesSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
+  return (
+    <HomeBand>
+      <SectionHeader eyebrow="Explore por categoria" title="Entre direto no estilo de conta que você procura" description="Os filtros avançados ficam no catálogo. Aqui você começa pelo caminho mais rápido." />
+      <div className="flex flex-wrap gap-3">
+        {categories.map((category, index) => (
+          <motion.button
+            key={category}
+            type="button"
+            onClick={() => onNavigate('explore')}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.42, delay: index * 0.04 }}
+            whileHover={{ y: -3, scale: 1.02 }}
+            className="group inline-flex min-h-12 items-center gap-2 rounded-full border border-blue-300/18 bg-white/[0.04] px-5 text-sm font-black text-slate-200 shadow-[0_12px_38px_rgba(0,0,0,0.16)] transition hover:border-blue-300/44 hover:text-white"
+          >
+            <span className="size-2 rounded-full bg-blue-300 shadow-[0_0_16px_rgba(56,189,248,0.7)] transition group-hover:bg-emerald-300" />
+            {category}
+          </motion.button>
+        ))}
+      </div>
+    </HomeBand>
+  )
+}
+
+function FinalCta({ onNavigate }: { onNavigate: (view: AppView) => void }) {
+  return (
+    <section className="relative py-10 sm:py-16">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(20,149,255,0.18),transparent_34%),radial-gradient(circle_at_70%_70%,rgba(34,197,94,0.11),transparent_28%)]" />
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.35 }}
+        transition={{ duration: 0.55 }}
+        className="relative mx-auto max-w-4xl rounded-3xl border border-blue-300/20 bg-[linear-gradient(145deg,rgba(16,24,39,0.86),rgba(7,11,22,0.92))] p-6 text-center shadow-[0_26px_100px_rgba(20,99,255,0.16)] sm:p-10"
+      >
+        <span className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-emerald-300/22 bg-emerald-500/12 text-emerald-200">
+          <Trophy aria-hidden="true" className="size-7" />
+        </span>
+        <h2 className="mt-5 text-3xl font-black text-white sm:text-5xl">Pronto para encontrar sua próxima conta?</h2>
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
+          Explore contas com itens raros, passes antigos, armas evolutivas e vendedores verificados.
+        </p>
+        <button type="button" onClick={() => onNavigate('explore')} className="acc-button-primary mt-7 inline-flex min-h-12 items-center gap-2 px-7 text-sm font-black transition hover:-translate-y-0.5">
+          Explorar contas
+          <ChevronRight aria-hidden="true" className="size-4" />
+        </button>
+      </motion.div>
+    </section>
+  )
+}
+
+function HomeBand({ children, id }: { children: ReactNode; id?: string }) {
+  return (
+    <section id={id} className="relative py-10 sm:py-14">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/18 to-transparent" />
+      <div className="relative mx-auto max-w-7xl space-y-7 px-0">{children}</div>
+    </section>
+  )
+}
+
+function SectionHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: ReactNode }) {
+  return (
+    <motion.div
+      variants={fadeUp}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.35 }}
+      transition={{ duration: 0.5 }}
+      className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
+    >
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-300">{eyebrow}</p>
+        <h2 className="mt-2 max-w-3xl text-3xl font-black leading-tight text-white sm:text-4xl">{title}</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{description}</p>
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
+    </motion.div>
+  )
+}
+
+function MiniMetric({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+      <p className="text-xl font-black text-white">{value}</p>
+      <p className="mt-1 text-xs font-semibold text-slate-500">{label}</p>
+    </div>
+  )
+}

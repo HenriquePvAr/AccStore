@@ -56,6 +56,23 @@ export async function createAsaasPayment(orderId: string) {
   return data
 }
 
+export async function createGuestAsaasPayment(orderId: string, guestToken: string) {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase.functions.invoke<AsaasPaymentResult>('create-asaas-payment', {
+    body: { orderId, guestToken },
+  })
+
+  if (error) {
+    throw new Error(await getFunctionErrorMessage(error))
+  }
+
+  if (!data) {
+    throw new Error(PAYMENT_ERROR_MESSAGE)
+  }
+
+  return data
+}
+
 export async function copyPixCode(pixCode: string) {
   await navigator.clipboard.writeText(pixCode)
 }

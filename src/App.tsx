@@ -20,7 +20,10 @@ import { LoginPage } from './components/auth/LoginPage'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { RegisterPage } from './components/auth/RegisterPage'
 import { BottomNav } from './components/BottomNav'
+import { GuestOrderTrackingPage } from './components/guest/GuestOrderTrackingPage'
+import { GuestProposalTrackingPage } from './components/guest/GuestProposalTrackingPage'
 import { Hero } from './components/Hero'
+import { HomePage } from './components/home/HomePage'
 import { RoleBasedSidebar } from './components/layout/RoleBasedSidebar'
 import { MessagesPage } from './components/messages/MessagesPage'
 import { OrdersPage } from './components/orders/OrdersPage'
@@ -98,6 +101,12 @@ function AppShell({ activeView }: AppShellProps) {
   const routeSupportId = normalizedPath.startsWith('/suporte/') && normalizedPath !== '/suporte/novo'
     ? decodeURIComponent(normalizedPath.split('/').filter(Boolean).at(-1) ?? '')
     : null
+  const routeGuestOrderToken = normalizedPath.startsWith('/acompanhar-pedido/')
+    ? decodeURIComponent(normalizedPath.split('/').filter(Boolean).at(-1) ?? '')
+    : null
+  const routeGuestProposalToken = normalizedPath.startsWith('/acompanhar-proposta/')
+    ? decodeURIComponent(normalizedPath.split('/').filter(Boolean).at(-1) ?? '')
+    : null
 
   useEffect(() => {
     let active = true
@@ -164,13 +173,6 @@ function AppShell({ activeView }: AppShellProps) {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleSection = (sectionId: string) => {
-    navigate('/')
-    window.setTimeout(() => {
-      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 30)
-  }
-
   const openDetails = (account: Account) => {
     setSelectedAccount(account)
     navigate('/detalhes')
@@ -179,7 +181,7 @@ function AppShell({ activeView }: AppShellProps) {
 
   const pageAccounts = activeView === 'explore' ? searchedAccounts : searchedAccounts.slice(0, 8)
 
-  const showMarketplace = activeView === 'home' || activeView === 'explore'
+  const showMarketplace = activeView === 'explore'
   const emptyTitle = 'Nenhuma conta encontrada para essa busca'
 
   return (
@@ -188,7 +190,7 @@ function AppShell({ activeView }: AppShellProps) {
       <RoleBasedSidebar activeView={activeView} onNavigate={handleNavigate} />
 
       <div className="relative lg:pl-[276px]">
-        <Topbar activeView={activeView} cartCount={0} onNavigate={handleNavigate} onSection={handleSection} />
+        <Topbar activeView={activeView} cartCount={0} onNavigate={handleNavigate} />
 
         <main className="mx-auto max-w-[1680px] px-4 pb-28 pt-3 sm:px-6 lg:px-7 lg:pb-10">
           {activeView === 'details' ? (
@@ -200,6 +202,15 @@ function AppShell({ activeView }: AppShellProps) {
             ) : (
               <EmptyState title="Selecione uma conta real no explorar para ver os detalhes" />
             )
+          ) : null}
+
+          {activeView === 'home' ? (
+            <HomePage
+              featuredAccounts={accounts.slice(0, 4)}
+              loading={isLoading}
+              onOpenAccount={openDetails}
+              onNavigate={handleNavigate}
+            />
           ) : null}
 
           {activeView === 'profile' ? <ProfileMenu onNavigate={handleNavigate} /> : null}
@@ -219,6 +230,10 @@ function AppShell({ activeView }: AppShellProps) {
           {activeView === 'supportNew' ? <SupportPage mode="new" /> : null}
 
           {activeView === 'supportDetails' ? <SupportPage mode="details" ticketId={routeSupportId} /> : null}
+
+          {activeView === 'guestOrderTracking' ? <GuestOrderTrackingPage token={routeGuestOrderToken} /> : null}
+
+          {activeView === 'guestProposalTracking' ? <GuestProposalTrackingPage token={routeGuestProposalToken} /> : null}
 
           {activeView === 'orders' ? <OrdersPage /> : null}
 
@@ -351,7 +366,7 @@ function AppFooter() {
   return (
     <footer className="relative mx-auto max-w-[1680px] px-4 pb-24 sm:px-6 lg:px-7 lg:pb-8">
       <div className="flex flex-col gap-3 border-t border-[rgba(120,140,255,0.16)] py-5 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
-        <p>ACCSTORE é uma plataforma independente, sem vínculo oficial com desenvolvedoras de jogos.</p>
+        <p>ACC Story é uma plataforma independente, sem vínculo oficial com desenvolvedoras de jogos.</p>
         <Link to="/termos" className="font-bold text-blue-300 transition hover:text-white">
           Termo de Compra e Responsabilidade
         </Link>
@@ -1036,7 +1051,7 @@ function orderRows(orders: Order[]): OperationalRow[] {
     id: order.id,
     title: order.orderCode,
     subtitle: `${formatBRL(order.amount)} - ${order.account?.title ?? 'Conta não carregada'}`,
-    meta: order.buyer?.fullName ?? formatDateTime(order.createdAt),
+    meta: order.buyer?.fullName ?? order.guestName ?? formatDateTime(order.createdAt),
     status: orderStatusLabel(order.status),
   }))
 }
@@ -1046,7 +1061,7 @@ function proposalRows(proposals: SellProposal[]): OperationalRow[] {
     id: proposal.id,
     title: proposal.proposalTitle,
     subtitle: `${formatBRL(proposal.desiredPrice)} - ${proposal.gameName}`,
-    meta: proposal.customer?.fullName ?? formatDateTime(proposal.createdAt),
+    meta: proposal.customer?.fullName ?? proposal.guestName ?? formatDateTime(proposal.createdAt),
     status: proposal.status.replaceAll('_', ' '),
   }))
 }

@@ -1,10 +1,11 @@
-import { ArrowLeft, Ban, CheckCircle2, Clock3, Eye, Handshake, LockKeyhole, Send, ShoppingBag } from 'lucide-react'
+import { ArrowLeft, Ban, CheckCircle2, Clock3, ExternalLink, Eye, Handshake, LockKeyhole, MessageCircle, Send, ShoppingBag } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { formatBRL, formatDateTime } from '../../lib/format'
 import { cn } from '../../lib/utils'
+import { formatWhatsAppDisplay, getWhatsAppUrl } from '../../lib/whatsapp'
 import { startProposalConversation } from '../../services/messagesService'
 import {
   approvePurchase,
@@ -114,7 +115,7 @@ function AnalysisProposalList({ proposals, selectedId, onSelect }: { proposals: 
                   <span className="font-black text-white">{item.proposalCode || item.id}</span>
                   <ProposalStatusBadge status={item.status} compact />
                 </span>
-                <span className="mt-1 block truncate text-sm font-semibold text-slate-300">{item.customer?.fullName ?? 'Cliente'}</span>
+                <span className="mt-1 block truncate text-sm font-semibold text-slate-300">{item.customer?.fullName ?? item.guestName ?? 'Cliente'}</span>
                 <span className="mt-1 block text-xs text-slate-500">{item.gameName} · {formatDateTime(item.createdAt)}</span>
               </span>
             </button>
@@ -131,6 +132,7 @@ function AnalysisProposalList({ proposals, selectedId, onSelect }: { proposals: 
 
 function ProposalAnalysisHeader({ proposal, onBack }: { proposal: SellProposal; onBack: () => void }) {
   const cover = proposal.media.find((item) => item.isCover) ?? proposal.media[0]
+  const customerName = proposal.customer?.fullName ?? proposal.guestName ?? 'Cliente'
 
   return (
     <div className="space-y-4">
@@ -150,7 +152,8 @@ function ProposalAnalysisHeader({ proposal, onBack }: { proposal: SellProposal; 
               <ProposalStatusBadge status={proposal.status} />
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-4">
-              <HeaderMetric label="Cliente" value={proposal.customer?.fullName ?? 'Cliente'} />
+              <HeaderMetric label="Cliente" value={customerName} />
+              {proposal.guestWhatsapp ? <HeaderMetric label="WhatsApp" value={formatWhatsAppDisplay(proposal.guestWhatsapp)} /> : null}
               <HeaderMetric label="Jogo" value={proposal.gameName} />
               <HeaderMetric label="Valor desejado" value={formatBRL(proposal.desiredPrice)} />
               <HeaderMetric label="Recebida em" value={formatDateTime(proposal.createdAt)} />
@@ -168,6 +171,9 @@ function ProposalDetailsCard({ proposal }: { proposal: SellProposal }) {
       <InfoTable
         rows={[
           ['Jogo', proposal.gameName],
+          ['Cliente', proposal.customer?.fullName ?? proposal.guestName ?? 'Cliente'],
+          ...(proposal.guestWhatsapp ? ([['WhatsApp', formatWhatsAppDisplay(proposal.guestWhatsapp)]] as Array<[string, string]>) : []),
+          ...(proposal.guestEmail ? ([['E-mail', proposal.guestEmail]] as Array<[string, string]>) : []),
           ['Título da conta', proposal.proposalTitle],
           ['Categoria', proposal.category],
           ['Plataforma', proposal.platform ?? 'Não informada'],
@@ -239,11 +245,16 @@ function ProposalNegotiationCard({ proposal, onChanged }: { proposal: SellPropos
   const [notes, setNotes] = useState(proposal.internalNotes ?? '')
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const whatsappUrl = proposal.guestWhatsapp ? getWhatsAppUrl(proposal.guestWhatsapp) : null
 
   const run = async (action: 'counter' | 'approve' | 'reject' | 'review' | 'negotiate') => {
     setBusy(true)
     setNotice(null)
     try {
+      if (action === 'negotiate' && proposal.isGuest) {
+        setNotice('Use o WhatsApp informado para falar com este cliente.')
+        return
+      }
       if (action === 'negotiate') {
         const conversation = await startProposalConversation(proposal.id)
         onChanged()
@@ -291,9 +302,21 @@ function ProposalNegotiationCard({ proposal, onChanged }: { proposal: SellPropos
         <DetailPair label="Última atualização" value={formatDateTime(proposal.updatedAt ?? proposal.createdAt)} />
         {notice ? <p className="rounded-lg border border-rose-400/25 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-200">{notice}</p> : null}
         <div className="space-y-2 pt-2">
+          {whatsappUrl ? (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-emerald-400/24 bg-emerald-500/10 px-4 text-sm font-black text-emerald-100 transition hover:border-emerald-300"
+            >
+              <MessageCircle aria-hidden="true" className="size-4" />
+              Chamar no WhatsApp
+              <ExternalLink aria-hidden="true" className="size-4" />
+            </a>
+          ) : null}
           <ActionButton icon={ShoppingBag} label="Aprovar compra" primary disabled={busy} onClick={() => void run('approve')} />
           <ActionButton icon={Clock3} label="Colocar em revisão" disabled={busy} onClick={() => void run('review')} />
-          <ActionButton icon={Handshake} label="Negociar" disabled={busy} onClick={() => void run('negotiate')} />
+          {!proposal.isGuest ? <ActionButton icon={Handshake} label="Negociar" disabled={busy} onClick={() => void run('negotiate')} /> : null}
           <ActionButton icon={Send} label="Enviar contraproposta" disabled={busy} onClick={() => void run('counter')} />
           <ActionButton icon={Ban} label="Recusar proposta" danger disabled={busy} onClick={() => void run('reject')} />
         </div>

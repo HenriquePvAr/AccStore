@@ -1,11 +1,13 @@
-import { Check, Clock3, CloudUpload, Save, Send, ShieldCheck, Store, Trash2 } from 'lucide-react'
+import { Check, Clock3, CloudUpload, ExternalLink, Mail, Phone, Save, Send, ShieldCheck, Store, Trash2, UserRound } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { formatBRL } from '../../lib/format'
 import { cn } from '../../lib/utils'
-import { uploadProposalMedia } from '../../services/mediaService'
-import { createSellProposal, saveProposalMedia } from '../../services/proposalsService'
+import { isValidWhatsApp } from '../../lib/whatsapp'
+import { uploadGuestProposalMedia, uploadProposalMedia } from '../../services/mediaService'
+import { createGuestSellProposal, createSellProposal, saveGuestProposalMedia, saveProposalMedia } from '../../services/proposalsService'
 import type { MediaType, ProposalStatus } from '../../services/types'
 
 interface LocalMedia {
@@ -27,6 +29,9 @@ export function SellToAccstorePage() {
   const [description, setDescription] = useState('')
   const [region, setRegion] = useState('')
   const [additionalInfo, setAdditionalInfo] = useState('')
+  const [guestName, setGuestName] = useState('')
+  const [guestWhatsapp, setGuestWhatsapp] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
   const [media, setMedia] = useState<LocalMedia[]>([])
   const [confirmOwner, setConfirmOwner] = useState(false)
   const [confirmTruth, setConfirmTruth] = useState(false)
@@ -34,6 +39,7 @@ export function SellToAccstorePage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [trackingLink, setTrackingLink] = useState<string | null>(null)
 
   const numericPrice = useMemo(() => parseBRL(desiredPrice), [desiredPrice])
 
@@ -74,7 +80,9 @@ export function SellToAccstorePage() {
   }
 
   const validate = (status: ProposalStatus) => {
-    if (!user) return 'Entre na plataforma para enviar uma proposta.'
+    if (!user && status === 'draft') return 'Para enviar sem conta, conclua a proposta agora.'
+    if (!user && !guestName.trim()) return 'Informe seu nome completo.'
+    if (!user && !isValidWhatsApp(guestWhatsapp)) return 'Informe um WhatsApp válido.'
     if (!gameName.trim() || !proposalTitle.trim() || !description.trim()) return 'Preencha as informações principais.'
     if (numericPrice <= 0) return 'Informe um preço desejado maior que zero.'
     if (status === 'draft') return null
@@ -82,6 +90,20 @@ export function SellToAccstorePage() {
     if (!acceptedTerms) return 'Você precisa aceitar os termos para enviar sua proposta.'
     if (!confirmOwner || !confirmTruth || !confirmRules) return 'Marque todas as confirmações de segurança.'
     return null
+  }
+
+  const resetForm = () => {
+    setGameName('')
+    setProposalTitle('')
+    setDesiredPrice('')
+    setDescription('')
+    setRegion('')
+    setAdditionalInfo('')
+    setMedia([])
+    setConfirmOwner(false)
+    setConfirmTruth(false)
+    setConfirmRules(false)
+    setAcceptedTerms(false)
   }
 
   const submitProposal = async (status: ProposalStatus) => {
@@ -92,13 +114,13 @@ export function SellToAccstorePage() {
       return
     }
 
-    if (!user) return
-
     setSubmitting(true)
     setNotice(null)
+    setTrackingLink(null)
 
     try {
-      const proposal = await createSellProposal({
+      if (user) {
+        const proposal = await createSellProposal({
         customerId: user.id,
         gameName: gameName.trim(),
         proposalTitle: proposalTitle.trim(),
@@ -125,17 +147,49 @@ export function SellToAccstorePage() {
         type: 'success',
         message: status === 'draft' ? `Rascunho ${proposal.proposalCode} salvo.` : `Proposta ${proposal.proposalCode} enviada para análise.`,
       })
-      setProposalTitle('')
-      setDesiredPrice('')
-      setDescription('')
-      setRegion('')
-      setAdditionalInfo('')
-      setMedia([])
-      setConfirmOwner(false)
-      setConfirmTruth(false)
-      setConfirmRules(false)
-      setAcceptedTerms(false)
-      window.setTimeout(() => navigate('/minhas-propostas', { replace: true }), 1100)
+        resetForm()
+        window.setTimeout(() => navigate('/minhas-propostas', { replace: true }), 1100)
+        return
+      }
+
+      const proposal = await createGuestSellProposal({
+        name: guestName,
+        whatsapp: guestWhatsapp,
+        email: guestEmail,
+        gameName: gameName.trim(),
+        proposalTitle: proposalTitle.trim(),
+        desiredPrice: numericPrice,
+        description: description.trim(),
+        region: region.trim(),
+        additionalInfo: additionalInfo.trim(),
+      })
+
+      if (!proposal.guestToken) {
+        throw new Error('Não foi possível gerar o link de acompanhamento.')
+      }
+
+      if (media.length > 0) {
+        const uploaded = await uploadGuestProposalMedia(media.map((item) => item.file), proposal.guestToken)
+        await saveGuestProposalMedia(
+          proposal.guestToken,
+          uploaded.map((item, index) => ({
+            url: item.url,
+            type: item.type,
+            isCover: media[index]?.isCover ?? index === 0,
+          })),
+        )
+      }
+
+      const nextTrackingLink = `/acompanhar-proposta/${proposal.guestToken}`
+      setTrackingLink(nextTrackingLink)
+      setNotice({
+        type: 'success',
+        message: `Proposta ${proposal.proposalCode} enviada para análise. Guarde este link para acompanhar sua proposta.`,
+      })
+      resetForm()
+      setGuestName('')
+      setGuestWhatsapp('')
+      setGuestEmail('')
     } catch (caught) {
       setNotice({ type: 'error', message: caught instanceof Error ? caught.message : 'Erro ao salvar proposta.' })
     } finally {
@@ -158,8 +212,25 @@ export function SellToAccstorePage() {
         </div>
       ) : null}
 
+      {trackingLink ? (
+        <Link to={trackingLink} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-emerald-400/24 bg-emerald-500/12 px-4 text-sm font-black text-emerald-100 transition hover:border-emerald-300 hover:text-white">
+          Acompanhar proposta
+          <ExternalLink aria-hidden="true" className="size-4" />
+        </Link>
+      ) : null}
+
       <form className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_380px]" onSubmit={(event) => void handleSubmit(event)}>
         <div className="space-y-4">
+          {!user ? (
+            <FormCard title="Contato para atendimento">
+              <p className="text-sm leading-6 text-slate-300">Informe seu WhatsApp para receber atendimento. Você poderá criar uma conta depois.</p>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <IconTextField icon={UserRound} label="Nome completo" value={guestName} onChange={setGuestName} placeholder="Seu nome" />
+                <IconTextField icon={Phone} label="WhatsApp" value={guestWhatsapp} onChange={setGuestWhatsapp} placeholder="(92) 99999-9999" inputMode="tel" />
+                <IconTextField icon={Mail} label="E-mail opcional" value={guestEmail} onChange={setGuestEmail} placeholder="voce@email.com" type="email" />
+              </div>
+            </FormCard>
+          ) : null}
           <FormCard title="1. Informações principais">
             <div className="grid gap-4 lg:grid-cols-2">
               <TextField label="Nome do jogo" value={gameName} onChange={setGameName} placeholder="Ex: Free Fire" />
@@ -186,11 +257,13 @@ export function SellToAccstorePage() {
 
           <ProposalMediaUpload media={media} onAddMedia={addMedia} onRemoveMedia={removeMedia} onMarkCover={markCover} />
 
-          <div className="grid gap-3 rounded-xl border border-[rgba(120,140,255,0.18)] bg-[#0B1222]/88 p-4 sm:grid-cols-2">
-            <button type="button" disabled={submitting} onClick={() => void submitProposal('draft')} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-[rgba(120,140,255,0.18)] bg-[#101827]/58 px-4 text-sm font-black text-white transition hover:border-blue-400/45 disabled:opacity-60">
-              <Save aria-hidden="true" className="size-4" />
-              {submitting ? 'Salvando...' : 'Salvar rascunho'}
-            </button>
+          <div className={cn('grid gap-3 rounded-xl border border-[rgba(120,140,255,0.18)] bg-[#0B1222]/88 p-4', user && 'sm:grid-cols-2')}>
+            {user ? (
+              <button type="button" disabled={submitting} onClick={() => void submitProposal('draft')} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-[rgba(120,140,255,0.18)] bg-[#101827]/58 px-4 text-sm font-black text-white transition hover:border-blue-400/45 disabled:opacity-60">
+                <Save aria-hidden="true" className="size-4" />
+                {submitting ? 'Salvando...' : 'Salvar rascunho'}
+              </button>
+            ) : null}
             <button type="submit" disabled={submitting} className="acc-button-primary inline-flex min-h-12 items-center justify-center gap-2 px-4 text-sm font-black transition disabled:opacity-60">
               <Send aria-hidden="true" className="size-4" />
               {submitting ? 'Enviando...' : 'Enviar proposta'}
@@ -375,6 +448,41 @@ function TextField({ label, placeholder, value, type = 'text', disabled, onChang
     <label className="block">
       <span className="mb-2 block text-xs font-bold text-slate-300">{label}</span>
       <input type={type} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="min-h-11 w-full rounded-lg border border-[rgba(120,140,255,0.18)] bg-[#101827]/70 px-3 text-sm font-semibold text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400/55 disabled:opacity-50" />
+    </label>
+  )
+}
+
+function IconTextField({
+  icon: Icon,
+  label,
+  placeholder,
+  value,
+  type = 'text',
+  inputMode,
+  onChange,
+}: {
+  icon: LucideIcon
+  label: string
+  placeholder: string
+  value: string
+  type?: string
+  inputMode?: 'text' | 'tel'
+  onChange: (value: string) => void
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-xs font-bold text-slate-300">{label}</span>
+      <span className="flex min-h-11 items-center rounded-lg border border-[rgba(120,140,255,0.18)] bg-[#101827]/70 px-3 transition focus-within:border-blue-400/55">
+        <Icon aria-hidden="true" className="size-4 shrink-0 text-slate-500" />
+        <input
+          type={type}
+          inputMode={inputMode}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          className="min-w-0 flex-1 border-0 bg-transparent px-3 text-sm font-semibold text-white outline-none placeholder:text-slate-500"
+        />
+      </span>
     </label>
   )
 }

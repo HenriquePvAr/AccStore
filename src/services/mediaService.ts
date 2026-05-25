@@ -52,12 +52,43 @@ async function uploadFiles(bucket: string, files: File[], userId?: string): Prom
   )
 }
 
+async function uploadFilesToPath(bucket: string, files: File[], basePath: string): Promise<UploadedMedia[]> {
+  const supabase = requireSupabase()
+
+  return Promise.all(
+    files.map(async (file) => {
+      assertFileAllowed(file)
+      const path = `${basePath}/${Date.now()}-${crypto.randomUUID()}-${safeFileName(file.name)}`
+      const { error } = await supabase.storage.from(bucket).upload(path, file, {
+        contentType: file.type,
+        upsert: false,
+      })
+
+      if (error) {
+        throw error
+      }
+
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+
+      return {
+        path,
+        url: data.publicUrl,
+        type: getMediaType(file),
+      }
+    }),
+  )
+}
+
 export async function uploadAccountMedia(files: File[], userId?: string) {
   return uploadFiles(accountBucket, files, userId)
 }
 
 export async function uploadProposalMedia(files: File[], userId?: string) {
   return uploadFiles(proposalBucket, files, userId)
+}
+
+export async function uploadGuestProposalMedia(files: File[], token: string) {
+  return uploadFilesToPath(proposalBucket, files, `guest/${token}`)
 }
 
 export async function uploadAvatar(file: File, userId: string) {

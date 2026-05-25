@@ -223,6 +223,10 @@ export async function startOrderConversation(orderId: string) {
     throw new Error('Você não tem permissão para conversar sobre esta compra.')
   }
 
+  if (!order.buyerId) {
+    throw new Error('Esta compra é acompanhada pelo link de pedido.')
+  }
+
   const existing = await supabase
     .from('conversations')
     .select('*')

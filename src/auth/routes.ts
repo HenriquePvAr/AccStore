@@ -17,6 +17,8 @@ export const viewPathMap: Record<AppView, string> = {
   support: '/suporte',
   supportNew: '/suporte/novo',
   supportDetails: '/suporte',
+  guestOrderTracking: '/acompanhar-pedido',
+  guestProposalTracking: '/acompanhar-proposta',
   orders: '/pedidos',
   sell: '/vender-conta',
   myProposals: '/minhas-propostas',
@@ -54,7 +56,7 @@ export const routeAccess: Record<string, RouteAccess> = {
   '/mensagens': { roles: ['customer', 'seller', 'admin'], view: 'messages' },
   '/suporte': { roles: ['customer', 'seller', 'admin'], view: 'support' },
   '/suporte/novo': { roles: ['customer'], view: 'supportNew' },
-  '/vender-conta': { roles: ['customer', 'seller', 'admin'], view: 'sell' },
+  '/vender-conta': { public: true, view: 'sell' },
   '/minhas-propostas': { roles: ['customer', 'seller', 'admin'], view: 'myProposals' },
   '/propostas-recebidas': { roles: ['seller', 'admin'], view: 'receivedProposals' },
   '/saldo': { roles: ['admin'], view: 'adminPayments' },
@@ -94,6 +96,14 @@ export function getRouteAccess(pathname: string) {
 
   if (normalizedPath.startsWith('/minhas-compras/')) {
     return { roles: ['customer', 'seller', 'admin'], view: 'purchaseDetails' } satisfies RouteAccess
+  }
+
+  if (normalizedPath.startsWith('/acompanhar-pedido/')) {
+    return { public: true, view: 'guestOrderTracking' } satisfies RouteAccess
+  }
+
+  if (normalizedPath.startsWith('/acompanhar-proposta/')) {
+    return { public: true, view: 'guestProposalTracking' } satisfies RouteAccess
   }
 
   if (normalizedPath.startsWith('/suporte/') && normalizedPath !== '/suporte/novo') {

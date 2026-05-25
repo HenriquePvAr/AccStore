@@ -75,7 +75,7 @@ export type OrderStatus = 'pending' | 'processing' | 'payment_review' | 'deliver
 
 export interface Order {
   id: string
-  buyerId: string
+  buyerId?: string
   sellerId: string
   accountId: string
   account?: Account
@@ -83,6 +83,12 @@ export interface Order {
   seller?: Profile
   orderCode: string
   amount: number
+  isGuest: boolean
+  guestName?: string
+  guestWhatsapp?: string
+  guestEmail?: string
+  guestToken?: string
+  guestTokenExpiresAt?: string
   paymentProvider?: string
   paymentProviderId?: string
   paymentStatus: PaymentStatus
@@ -162,7 +168,7 @@ export interface SellProposalMedia {
 
 export interface SellProposal {
   id: string
-  customerId: string
+  customerId?: string
   customer?: Profile
   proposalCode: string
   gameName: string
@@ -170,6 +176,12 @@ export interface SellProposal {
   category: AccountCategory
   desiredPrice: number
   description: string
+  isGuest: boolean
+  guestName?: string
+  guestWhatsapp?: string
+  guestEmail?: string
+  guestToken?: string
+  guestTokenExpiresAt?: string
   login?: string
   password?: string
   linkedEmail?: string
@@ -198,6 +210,25 @@ export interface SellProposalPayload {
   region?: string
   additionalInfo?: string
   status?: ProposalStatus
+}
+
+export interface GuestContactPayload {
+  name: string
+  whatsapp: string
+  email?: string
+}
+
+export interface GuestOrderPayload extends GuestContactPayload {
+  accountId: string
+}
+
+export interface GuestSellProposalPayload extends GuestContactPayload {
+  gameName: string
+  proposalTitle: string
+  desiredPrice: number
+  description: string
+  region?: string
+  additionalInfo?: string
 }
 
 export interface CounterOfferPayload {

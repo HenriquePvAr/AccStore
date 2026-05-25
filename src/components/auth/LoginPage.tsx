@@ -1,15 +1,19 @@
-import { LockKeyhole, LogIn, Mail } from 'lucide-react'
+import { Eye, EyeOff, LockKeyhole, LogIn, Mail } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { roleHomePath } from '../../auth/types'
+import { sendPasswordResetEmail } from '../../services/authService'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -17,6 +21,7 @@ export function LoginPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
+    setNotice(null)
 
     if (!email.trim() || !password) {
       setError('Informe e-mail e senha para entrar.')
@@ -36,6 +41,28 @@ export function LoginPage() {
     }
   }
 
+  const handlePasswordReset = async () => {
+    const trimmedEmail = email.trim()
+    setError(null)
+    setNotice(null)
+
+    if (!trimmedEmail) {
+      setError('Digite seu e-mail acima para receber o link de recuperação.')
+      return
+    }
+
+    setResetLoading(true)
+
+    try {
+      await sendPasswordResetEmail(trimmedEmail, `${window.location.origin}/configuracoes`)
+      setNotice('Enviamos um link de recuperação para seu e-mail. Use o link para trocar sua senha.')
+    } catch {
+      setError('Não foi possível enviar o link de recuperação agora. Confira o e-mail e tente novamente.')
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
   return (
     <AuthScreen>
       <div className="mb-8 text-center">
@@ -48,11 +75,34 @@ export function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <AuthField icon={Mail} label="E-mail" value={email} onChange={setEmail} type="email" />
-        <AuthField icon={LockKeyhole} label="Senha" value={password} onChange={setPassword} type="password" />
+        <AuthField
+          icon={LockKeyhole}
+          label="Senha"
+          value={password}
+          onChange={setPassword}
+          type={showPassword ? 'text' : 'password'}
+          trailing={
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
+              title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+            >
+              {showPassword ? <EyeOff aria-hidden="true" className="size-4" /> : <Eye aria-hidden="true" className="size-4" />}
+            </button>
+          }
+        />
 
         {error ? (
           <p className="rounded-lg border border-rose-400/24 bg-rose-500/12 p-3 text-sm font-semibold text-rose-200">
             {error}
+          </p>
+        ) : null}
+
+        {notice ? (
+          <p className="rounded-lg border border-emerald-400/24 bg-emerald-500/12 p-3 text-sm font-semibold text-emerald-200">
+            {notice}
           </p>
         ) : null}
 
@@ -70,8 +120,13 @@ export function LoginPage() {
         <Link to="/cadastro" className="text-blue-300 transition hover:text-white">
           Criar conta
         </Link>
-        <button type="button" className="text-slate-400 transition hover:text-white">
-          Esqueci minha senha
+        <button
+          type="button"
+          onClick={() => void handlePasswordReset()}
+          disabled={resetLoading}
+          className="text-slate-400 transition hover:text-white disabled:opacity-60"
+        >
+          {resetLoading ? 'Enviando...' : 'Esqueci minha senha'}
         </button>
       </div>
 
@@ -98,10 +153,11 @@ interface AuthFieldProps {
   label: string
   value: string
   type: string
+  trailing?: ReactNode
   onChange: (value: string) => void
 }
 
-function AuthField({ icon: Icon, label, value, type, onChange }: AuthFieldProps) {
+function AuthField({ icon: Icon, label, value, type, trailing, onChange }: AuthFieldProps) {
   return (
     <label className="block">
       <span className="mb-2 block text-xs font-black uppercase tracking-[0.06em] text-slate-400">{label}</span>
@@ -114,6 +170,7 @@ function AuthField({ icon: Icon, label, value, type, onChange }: AuthFieldProps)
           required
           className="min-w-0 flex-1 border-0 bg-transparent px-3 text-sm font-semibold text-white outline-none placeholder:text-slate-500"
         />
+        {trailing}
       </span>
     </label>
   )

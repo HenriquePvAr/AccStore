@@ -1,15 +1,17 @@
-import { ArrowLeft, CheckCircle2, Copy, Headphones, LockKeyhole, PlayCircle, QrCode, ShieldCheck, ShoppingCart, Sparkles } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Copy, ExternalLink, Headphones, LockKeyhole, Mail, Phone, PlayCircle, QrCode, ShieldCheck, ShoppingCart, Sparkles, UserRound } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { getAccountMediaItems, inferMediaType } from '../lib/media'
 import { accountToHighlights } from '../services/accountsService'
 import { createOrderConversation } from '../services/messagesService'
-import { createOrder } from '../services/ordersService'
-import { copyPixCode, createAsaasPayment, type AsaasPaymentResult } from '../services/paymentsService'
+import { createGuestOrder, createOrder } from '../services/ordersService'
+import { copyPixCode, createAsaasPayment, createGuestAsaasPayment, type AsaasPaymentResult } from '../services/paymentsService'
 import type { Account, AccountMedia } from '../services/types'
 import { formatBRL } from '../lib/format'
 import { cn } from '../lib/utils'
+import { isValidWhatsApp } from '../lib/whatsapp'
 import { AccountArtwork } from './AccountArtwork'
 
 interface AccountDetailsProps {
@@ -32,11 +34,19 @@ export function AccountDetails({ account, onBack }: AccountDetailsProps) {
   const [creatingOrder, setCreatingOrder] = useState(false)
   const [checkout, setCheckout] = useState<AsaasPaymentResult | null>(null)
   const [copyNotice, setCopyNotice] = useState<string | null>(null)
+  const [guestCheckoutOpen, setGuestCheckoutOpen] = useState(false)
+  const [guestName, setGuestName] = useState('')
+  const [guestWhatsapp, setGuestWhatsapp] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
+  const [guestAdultConfirmed, setGuestAdultConfirmed] = useState(false)
+  const [trackingLink, setTrackingLink] = useState<string | null>(null)
   const highlights = accountToHighlights(account)
 
   const handleBuy = async () => {
     if (!user) {
-      setError('Entre na plataforma para criar um pedido real.')
+      setGuestCheckoutOpen(true)
+      setError(null)
+      setNotice(null)
       return
     }
 
@@ -67,6 +77,52 @@ export function AccountDetails({ account, onBack }: AccountDetailsProps) {
       setNotice(`Pedido ${order.orderCode} criado. A confirmação é automática após o pagamento.`)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Erro ao criar pedido ou gerar pagamento.')
+    } finally {
+      setCreatingOrder(false)
+    }
+  }
+
+  const handleGuestCheckout = async () => {
+    if (!guestName.trim()) {
+      setError('Informe seu nome completo.')
+      return
+    }
+
+    if (!isValidWhatsApp(guestWhatsapp)) {
+      setError('Informe um WhatsApp válido.')
+      return
+    }
+
+    if (!acceptedTerms || !guestAdultConfirmed) {
+      setError('Confirme os termos para continuar.')
+      return
+    }
+
+    setCreatingOrder(true)
+    setError(null)
+    setNotice(null)
+    setCheckout(null)
+    setTrackingLink(null)
+
+    try {
+      const order = await createGuestOrder({
+        accountId: account.id,
+        name: guestName,
+        whatsapp: guestWhatsapp,
+        email: guestEmail,
+      })
+
+      if (!order.guestToken) {
+        throw new Error('Não foi possível gerar o link de acompanhamento.')
+      }
+
+      const payment = await createGuestAsaasPayment(order.id, order.guestToken)
+      const nextTrackingLink = `/acompanhar-pedido/${order.guestToken}`
+      setCheckout(payment)
+      setTrackingLink(nextTrackingLink)
+      setNotice('Pedido criado. Guarde o link para acompanhar seu pedido.')
+    } catch {
+      setError('Não foi possível criar o pedido ou gerar o Pix agora.')
     } finally {
       setCreatingOrder(false)
     }
@@ -131,13 +187,31 @@ export function AccountDetails({ account, onBack }: AccountDetailsProps) {
               className="acc-button-commerce inline-flex min-h-12 w-full items-center justify-center gap-2 px-4 text-sm font-black transition disabled:opacity-60"
             >
               <ShoppingCart aria-hidden="true" className="size-5" />
-              {creatingOrder ? 'Criando pedido...' : 'Comprar agora'}
+              {creatingOrder ? 'Criando pedido...' : user ? 'Comprar agora' : 'Comprar sem criar conta'}
             </button>
           </div>
 
           {notice ? <p className="mt-4 rounded-lg border border-emerald-400/24 bg-emerald-500/12 p-3 text-sm font-semibold text-emerald-200">{notice}</p> : null}
           {error ? <p className="mt-4 rounded-lg border border-rose-400/24 bg-rose-500/12 p-3 text-sm font-semibold text-rose-200">{error}</p> : null}
         </section>
+
+        {!user && guestCheckoutOpen ? (
+          <GuestCheckoutPanel
+            name={guestName}
+            whatsapp={guestWhatsapp}
+            email={guestEmail}
+            acceptedTerms={acceptedTerms}
+            adultConfirmed={guestAdultConfirmed}
+            submitting={creatingOrder}
+            trackingLink={trackingLink}
+            onNameChange={setGuestName}
+            onWhatsappChange={setGuestWhatsapp}
+            onEmailChange={setGuestEmail}
+            onAcceptedTermsChange={setAcceptedTerms}
+            onAdultConfirmedChange={setGuestAdultConfirmed}
+            onSubmit={handleGuestCheckout}
+          />
+        ) : null}
 
         {checkout ? (
           <PaymentPanel
@@ -189,6 +263,132 @@ export function AccountDetails({ account, onBack }: AccountDetailsProps) {
         </section>
       </aside>
     </section>
+  )
+}
+
+function GuestCheckoutPanel({
+  name,
+  whatsapp,
+  email,
+  acceptedTerms,
+  adultConfirmed,
+  submitting,
+  trackingLink,
+  onNameChange,
+  onWhatsappChange,
+  onEmailChange,
+  onAcceptedTermsChange,
+  onAdultConfirmedChange,
+  onSubmit,
+}: {
+  name: string
+  whatsapp: string
+  email: string
+  acceptedTerms: boolean
+  adultConfirmed: boolean
+  submitting: boolean
+  trackingLink: string | null
+  onNameChange: (value: string) => void
+  onWhatsappChange: (value: string) => void
+  onEmailChange: (value: string) => void
+  onAcceptedTermsChange: (value: boolean) => void
+  onAdultConfirmedChange: (value: boolean) => void
+  onSubmit: () => Promise<void>
+}) {
+  return (
+    <section className="acc-safe-panel p-5">
+      <div className="flex items-start gap-3">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-blue-300/20 bg-blue-500/[0.12] text-blue-200">
+          <Phone aria-hidden="true" className="size-5" />
+        </span>
+        <div>
+          <h2 className="text-lg font-black text-white">Comprar sem criar conta</h2>
+          <p className="mt-1 text-sm leading-6 text-slate-300">Informe seu WhatsApp para receber atendimento. Você poderá criar uma conta depois.</p>
+        </div>
+      </div>
+
+      <form
+        className="mt-4 space-y-3"
+        onSubmit={(event) => {
+          event.preventDefault()
+          void onSubmit()
+        }}
+      >
+        <GuestTextField icon={UserRound} label="Nome completo" value={name} onChange={onNameChange} placeholder="Seu nome" />
+        <GuestTextField icon={Phone} label="WhatsApp" value={whatsapp} onChange={onWhatsappChange} placeholder="(92) 99999-9999" inputMode="tel" />
+        <GuestTextField icon={Mail} label="E-mail opcional" value={email} onChange={onEmailChange} placeholder="voce@email.com" type="email" />
+
+        <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3 text-sm leading-6 text-slate-300">
+          <input
+            type="checkbox"
+            checked={acceptedTerms}
+            onChange={(event) => onAcceptedTermsChange(event.target.checked)}
+            className="mt-1 size-4 rounded border-[rgba(120,140,255,0.28)] bg-[#101827] accent-[#1463FF]"
+          />
+          <span>Li e aceito os termos da ACCSTORE.</span>
+        </label>
+
+        <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3 text-sm leading-6 text-slate-300">
+          <input
+            type="checkbox"
+            checked={adultConfirmed}
+            onChange={(event) => onAdultConfirmedChange(event.target.checked)}
+            className="mt-1 size-4 rounded border-[rgba(120,140,255,0.28)] bg-[#101827] accent-[#1463FF]"
+          />
+          <span>Confirmo que tenho autorização para realizar esta compra.</span>
+        </label>
+
+        <button type="submit" disabled={submitting} className="acc-button-primary inline-flex min-h-12 w-full items-center justify-center gap-2 px-4 text-sm font-black transition disabled:opacity-60">
+          <QrCode aria-hidden="true" className="size-4" />
+          {submitting ? 'Gerando Pix...' : 'Gerar Pix'}
+        </button>
+      </form>
+
+      {trackingLink ? (
+        <div className="mt-4 rounded-lg border border-emerald-400/22 bg-emerald-500/10 p-3">
+          <p className="text-sm font-bold text-emerald-100">Guarde este link para acompanhar seu pedido.</p>
+          <Link to={trackingLink} className="mt-2 inline-flex items-center gap-2 text-sm font-black text-emerald-200 transition hover:text-white">
+            Abrir acompanhamento
+            <ExternalLink aria-hidden="true" className="size-4" />
+          </Link>
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
+function GuestTextField({
+  icon: Icon,
+  label,
+  placeholder,
+  value,
+  type = 'text',
+  inputMode,
+  onChange,
+}: {
+  icon: LucideIcon
+  label: string
+  placeholder: string
+  value: string
+  type?: string
+  inputMode?: 'text' | 'tel'
+  onChange: (value: string) => void
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-xs font-bold text-slate-300">{label}</span>
+      <span className="flex min-h-11 items-center rounded-lg border border-[rgba(120,140,255,0.18)] bg-[#101827]/70 px-3 transition focus-within:border-blue-400/55">
+        <Icon aria-hidden="true" className="size-4 shrink-0 text-slate-500" />
+        <input
+          type={type}
+          inputMode={inputMode}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          className="min-w-0 flex-1 border-0 bg-transparent px-3 text-sm font-semibold text-white outline-none placeholder:text-slate-500"
+        />
+      </span>
+    </label>
   )
 }
 
