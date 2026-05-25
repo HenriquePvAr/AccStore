@@ -196,3 +196,66 @@ video {
     linear-gradient(145deg, rgba(14, 165, 233, 0.08), rgba(34, 197, 94, 0.08)),
     rgba(7, 11, 22, 0.86);
 }
+
+.acc-home-scanner {
+  position: absolute;
+  inset-inline: 0;
+  top: -30%;
+  height: 34%;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(56, 189, 248, 0.12),
+    rgba(159, 246, 198, 0.1),
+    transparent
+  );
+  transform: translateY(-40%);
+  animation: acc-home-scan 7s ease-in-out 1.2s infinite;
+}
+
+.acc-home-float {
+  animation: acc-home-float 7s ease-in-out infinite;
+}
+
+@keyframes acc-home-scan {
+  0%,
+  24% {
+    opacity: 0;
+    transform: translateY(-40%);
+  }
+
+  34% {
+    opacity: 0.72;
+  }
+
+  56% {
+    opacity: 0.5;
+    transform: translateY(360%);
+  }
+
+  68%,
+  100% {
+    opacity: 0;
+    transform: translateY(360%);
+  }
+}
+
+@keyframes acc-home-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-home-scanner,
+  .acc-home-float {
+    animation: none;
+  }
+}

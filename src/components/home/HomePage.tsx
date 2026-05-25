@@ -29,7 +29,7 @@ interface HomePageProps {
   onNavigate: (view: AppView) => void
 }
 
-const heroTags = ['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Conta veterana', 'Vendedor verificado']
+const heroTags = ['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Conta veterana', 'Verificado']
 
 const featuredFallbackImages = [
   '/assets/accstore/card-rare.png',
@@ -60,6 +60,30 @@ const fadeUp = {
   visible: { opacity: 1, y: 0 },
 }
 
+const fadeSoft = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+}
+
+const heroGroup = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.08,
+    },
+  },
+}
+
+const heroItem = {
+  hidden: { opacity: 0, y: 22 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.65, ease: 'easeOut' as const },
+  },
+}
+
 export function HomePage({ featuredAccounts, loading = false, onOpenAccount, onNavigate }: HomePageProps) {
   const supportWhatsapp = typeof import.meta.env.VITE_PUBLIC_WHATSAPP === 'string' ? import.meta.env.VITE_PUBLIC_WHATSAPP : ''
   const supportWhatsappUrl = supportWhatsapp ? getWhatsAppUrl(supportWhatsapp) : null
@@ -85,31 +109,30 @@ export function HomePage({ featuredAccounts, loading = false, onOpenAccount, onN
 
 function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
   return (
-    <section className="relative min-h-[calc(100svh-4rem)] overflow-hidden py-10 sm:py-14 lg:py-18">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(20,149,255,0.2),transparent_30%),radial-gradient(circle_at_82%_20%,rgba(139,92,246,0.18),transparent_34%),radial-gradient(circle_at_62%_82%,rgba(34,197,94,0.12),transparent_30%)]" />
-      <div className="absolute inset-0 bg-grid-fade bg-[length:44px_44px] opacity-[0.08]" />
+    <section className="relative min-h-[calc(100svh-4rem)] overflow-hidden py-10 sm:py-14 lg:py-16">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(20,149,255,0.14),transparent_30%),radial-gradient(circle_at_82%_20%,rgba(139,92,246,0.1),transparent_34%),radial-gradient(circle_at_62%_82%,rgba(34,197,94,0.08),transparent_30%)]" />
+      <div className="absolute inset-0 bg-grid-fade bg-[length:48px_48px] opacity-[0.055]" />
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#05070F] to-transparent" />
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1fr)]">
         <motion.div
-          variants={fadeUp}
+          variants={heroGroup}
           initial="hidden"
           animate="visible"
-          transition={{ duration: 0.7, ease: 'easeOut' }}
           className="max-w-3xl"
         >
-          <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-[0.12em] text-blue-200">
+          <motion.span variants={heroItem} className="inline-flex min-h-8 items-center gap-2 rounded-full border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-[0.12em] text-blue-200">
             <Sparkles aria-hidden="true" className="size-3.5" />
             Marketplace gamer premium
-          </span>
-          <h1 className="mt-5 max-w-4xl text-[42px] font-black leading-[0.98] tracking-normal text-white sm:text-[64px] lg:text-[78px]">
+          </motion.span>
+          <motion.h1 variants={heroItem} className="mt-5 max-w-4xl text-[42px] font-black leading-[0.98] tracking-normal text-white sm:text-[64px] lg:text-[78px]">
             Sua próxima conta está aqui
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+          </motion.h1>
+          <motion.p variants={heroItem} className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
             Encontre contas com itens raros, passes antigos, armas evolutivas e muito mais.
-          </p>
+          </motion.p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <motion.div variants={heroItem} className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
               onClick={() => onNavigate('explore')}
@@ -126,13 +149,13 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
               <Store aria-hidden="true" className="size-4" />
               Quero vender minha conta
             </button>
-          </div>
+          </motion.div>
 
-          <div className="mt-8 grid max-w-xl grid-cols-3 gap-3">
+          <motion.div variants={heroItem} className="mt-8 grid max-w-xl grid-cols-3 gap-3">
             <MiniMetric value="4+" label="perfis de conta" />
             <MiniMetric value="Pix" label="pagamento claro" />
             <MiniMetric value="24h" label="suporte ágil" />
-          </div>
+          </motion.div>
         </motion.div>
 
         <HeroAccountShowcase />
@@ -148,34 +171,29 @@ function HeroAccountShowcase() {
     target: containerRef,
     offset: ['start 70%', 'end 20%'],
   })
-  const cardY = useTransform(scrollYProgress, [0, 1], reducedMotion ? [0, 0] : [32, -12])
-  const cardScale = useTransform(scrollYProgress, [0, 0.6, 1], reducedMotion ? [1, 1, 1] : [0.94, 1, 1.03])
-  const scannerY = useTransform(scrollYProgress, [0.15, 0.95], ['-40%', '138%'])
-  const scannerOpacity = useTransform(scrollYProgress, [0, 0.18, 0.82, 1], [0, 1, 1, 0])
-  const verifiedOpacity = useTransform(scrollYProgress, [0.56, 0.82], [0, 1])
-  const verifiedScale = useTransform(scrollYProgress, [0.56, 0.82], [0.7, 1])
+  const cardY = useTransform(scrollYProgress, [0, 1], reducedMotion ? [0, 0] : [18, -4])
+  const cardScale = useTransform(scrollYProgress, [0, 0.65, 1], reducedMotion ? [1, 1, 1] : [0.98, 1, 1.01])
 
   return (
-    <div ref={containerRef} className="relative min-h-[560px] lg:min-h-[640px]">
+    <div ref={containerRef} className="relative min-h-[520px] lg:min-h-[620px]">
       <motion.div
         style={{ y: cardY, scale: cardScale }}
-        initial={{ opacity: 0, rotateX: 8, rotateY: -10 }}
+        initial={{ opacity: 0, scale: 0.96, y: 18 }}
         animate={{ opacity: 1, rotateX: 0, rotateY: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
-        className="relative mx-auto max-w-[430px] rounded-[28px] border border-blue-300/24 bg-[linear-gradient(145deg,rgba(16,24,39,0.86),rgba(7,11,22,0.96))] p-4 shadow-[0_34px_120px_rgba(20,99,255,0.22)] backdrop-blur-xl"
+        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.12 }}
+        className="group/home-card relative mx-auto max-w-[430px] rounded-[28px] border border-blue-300/18 bg-[linear-gradient(145deg,rgba(16,24,39,0.78),rgba(7,11,22,0.94))] p-4 shadow-[0_28px_90px_rgba(20,99,255,0.14)] backdrop-blur-xl transition duration-500 hover:border-blue-300/34 hover:shadow-[0_34px_110px_rgba(20,99,255,0.2)]"
       >
-        <div className="absolute -inset-px rounded-[28px] bg-[linear-gradient(120deg,rgba(56,189,248,0.24),transparent_32%,rgba(34,197,94,0.18)_72%,rgba(139,92,246,0.18))] opacity-80 blur-[1px]" />
+        <div className="absolute -inset-px rounded-[28px] bg-[linear-gradient(120deg,rgba(56,189,248,0.16),transparent_34%,rgba(34,197,94,0.12)_76%,rgba(139,92,246,0.1))] opacity-70 blur-[1px]" />
         <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-[#070B16]">
           <div className="relative aspect-[4/5] overflow-hidden">
             <img src="/assets/accstore/card-rare.png" alt="Card visual de conta Free Fire verificada" className="size-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#070B16] via-[#070B16]/18 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#070B16] via-[#070B16]/22 to-transparent" />
+            <span className="acc-home-scanner" aria-hidden="true" />
             <motion.div
-              style={{ y: scannerY, opacity: scannerOpacity }}
-              className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,transparent,rgba(56,189,248,0.34),transparent)]"
-            />
-            <motion.div
-              style={{ opacity: verifiedOpacity, scale: verifiedScale }}
-              className="absolute right-4 top-4 inline-flex min-h-10 items-center gap-2 rounded-full border border-emerald-300/28 bg-emerald-400/16 px-3 text-xs font-black text-emerald-100 backdrop-blur"
+              initial={{ opacity: 0, scale: 0.9, y: -4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: 'easeOut', delay: 0.75 }}
+              className="absolute right-4 top-4 inline-flex min-h-10 items-center gap-2 rounded-full border border-emerald-300/24 bg-emerald-400/14 px-3 text-xs font-black text-emerald-100 backdrop-blur"
             >
               <BadgeCheck aria-hidden="true" className="size-4" />
               Verificado
@@ -195,8 +213,8 @@ function HeroAccountShowcase() {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              {['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Conta veterana'].map((tag) => (
-                <span key={tag} className="rounded-lg border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200">
+              {['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Conta veterana', 'Vendedor verificado'].map((tag) => (
+                <span key={tag} className="rounded-lg border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200 last:col-span-2">
                   {tag}
                 </span>
               ))}
@@ -208,13 +226,13 @@ function HeroAccountShowcase() {
       {heroTags.map((tag, index) => (
         <motion.span
           key={tag}
-          variants={fadeUp}
+          variants={fadeSoft}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.6 }}
-          transition={{ duration: 0.5, delay: 0.1 + index * 0.07 }}
+          transition={{ duration: 0.55, delay: 0.12 + index * 0.06 }}
           className={cn(
-            'absolute hidden rounded-full border px-3 py-2 text-xs font-black shadow-[0_16px_40px_rgba(0,0,0,0.24)] backdrop-blur md:inline-flex',
+            'acc-home-float absolute hidden rounded-full border px-3 py-2 text-xs font-black shadow-[0_14px_34px_rgba(0,0,0,0.2)] backdrop-blur md:inline-flex',
             index % 3 === 0 && 'border-blue-300/24 bg-blue-500/14 text-blue-100',
             index % 3 === 1 && 'border-violet-300/22 bg-violet-500/12 text-violet-100',
             index % 3 === 2 && 'border-emerald-300/22 bg-emerald-500/12 text-emerald-100',
@@ -226,10 +244,19 @@ function HeroAccountShowcase() {
               'left-1/2 top-[52%] -translate-x-1/2',
             ][index],
           )}
+          style={{ animationDelay: `${index * 0.45}s` }}
         >
           {tag}
         </motion.span>
       ))}
+
+      <div className="mt-4 flex flex-wrap justify-center gap-2 md:hidden">
+        {heroTags.map((tag) => (
+          <span key={tag} className="rounded-full border border-blue-300/16 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200">
+            {tag}
+          </span>
+        ))}
+      </div>
     </div>
   )
 }
@@ -274,6 +301,7 @@ function FeaturedAccountsSection({
               key={account.id}
               account={account}
               imageFallback={featuredFallbackImages[index % featuredFallbackImages.length]}
+              index={index}
               supportWhatsappUrl={supportWhatsappUrl}
               onOpen={() => onOpenAccount(account)}
             />
@@ -296,11 +324,13 @@ function FeaturedAccountsSection({
 function FeaturedAccountCard({
   account,
   imageFallback,
+  index,
   supportWhatsappUrl,
   onOpen,
 }: {
   account: Account
   imageFallback: string
+  index: number
   supportWhatsappUrl: string | null
   onOpen: () => void
 }) {
@@ -317,9 +347,9 @@ function FeaturedAccountCard({
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 0.48, ease: 'easeOut' }}
-      whileHover={{ y: -6, scale: 1.015 }}
-      className="group overflow-hidden rounded-2xl border border-blue-300/16 bg-[linear-gradient(145deg,rgba(16,24,39,0.92),rgba(7,11,22,0.94))] shadow-[0_20px_70px_rgba(0,0,0,0.24)]"
+      transition={{ duration: 0.5, ease: 'easeOut', delay: index * 0.06 }}
+      whileHover={{ y: -4, scale: 1.01 }}
+      className="group overflow-hidden rounded-2xl border border-blue-300/14 bg-[linear-gradient(145deg,rgba(16,24,39,0.86),rgba(7,11,22,0.94))] shadow-[0_18px_58px_rgba(0,0,0,0.22)] transition duration-300 hover:border-blue-300/34 hover:shadow-[0_22px_70px_rgba(20,99,255,0.13)]"
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         <img src={image} alt={`Destaque ${account.title}`} className="size-full object-cover transition duration-500 group-hover:scale-105" />
