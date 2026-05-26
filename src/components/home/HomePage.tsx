@@ -16,6 +16,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import gsap from 'gsap'
+import Lenis from 'lenis'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useEffect, useRef, type MutableRefObject, type ReactNode, type RefObject } from 'react'
 import type { AppView } from '../../lib/navigation'
@@ -65,11 +66,13 @@ const steps: Array<{ icon: LucideIcon; title: string; text: string }> = [
 ]
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  visible: { opacity: 1, y: 0 },
+  hidden: { opacity: 0, y: 34, filter: 'blur(8px)' },
+  visible: { opacity: 1, y: 0, filter: 'blur(0px)' },
 }
 
 export function HomePage({ onNavigate }: HomePageProps) {
+  useHomeSmoothScroll()
+
   const supportWhatsapp = typeof import.meta.env.VITE_PUBLIC_WHATSAPP === 'string' ? import.meta.env.VITE_PUBLIC_WHATSAPP : ''
   const supportWhatsappUrl = supportWhatsapp ? getWhatsAppUrl(supportWhatsapp) : null
 
@@ -85,6 +88,43 @@ export function HomePage({ onNavigate }: HomePageProps) {
   )
 }
 
+function useHomeSmoothScroll() {
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger)
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (prefersReducedMotion) {
+      return undefined
+    }
+
+    const lenis = new Lenis({
+      duration: 1.18,
+      easing: (time) => Math.min(1, 1.001 - 2 ** (-10 * time)),
+      smoothWheel: true,
+      syncTouch: false,
+      touchMultiplier: 1,
+      wheelMultiplier: 0.95,
+    })
+    const onScroll = () => ScrollTrigger.update()
+    const tick = (time: number) => {
+      lenis.raf(time * 1000)
+    }
+
+    lenis.on('scroll', onScroll)
+    gsap.ticker.add(tick)
+    gsap.ticker.lagSmoothing(0)
+    ScrollTrigger.refresh()
+
+    return () => {
+      lenis.off('scroll', onScroll)
+      gsap.ticker.remove(tick)
+      lenis.destroy()
+      ScrollTrigger.refresh()
+    }
+  }, [])
+}
+
 function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
   const heroRef = useRef<HTMLElement | null>(null)
   const eyebrowRef = useRef<HTMLSpanElement | null>(null)
@@ -97,12 +137,17 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
   const scannerRef = useRef<HTMLSpanElement | null>(null)
   const shineRef = useRef<HTMLSpanElement | null>(null)
   const tagRefs = useRef<HTMLSpanElement[]>([])
+  const blueGlowRef = useRef<HTMLDivElement | null>(null)
+  const greenGlowRef = useRef<HTMLDivElement | null>(null)
+  const gridRef = useRef<HTMLDivElement | null>(null)
+  const shapeRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
 
     const context = gsap.context(() => {
       const media = gsap.matchMedia()
+      const buttonItems = () => Array.from(buttonsRef.current?.children ?? []) as HTMLElement[]
       const copyItems = () =>
         [
           eyebrowRef.current,
@@ -115,30 +160,59 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
       const visibleItems = () =>
         [
           ...copyItems(),
+          ...buttonItems(),
           accountCardRef.current,
           verifiedRef.current,
           ...tagItems(),
         ].filter(Boolean) as HTMLElement[]
 
       media.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
+        const buttons = buttonItems()
         const tags = tagItems()
 
-        gsap.set(eyebrowRef.current, { opacity: 0.74, y: 14 })
-        gsap.set(titleRef.current, { opacity: 0.48, y: 28 })
-        gsap.set([subtitleRef.current, buttonsRef.current, metricsRef.current], { opacity: 0, y: 40 })
-        gsap.set(accountCardRef.current, { opacity: 0, x: 80, y: 80, scale: 0.9, transformOrigin: 'center center' })
-        gsap.set(tags, { opacity: 0, y: 22, scale: 0.9, transformOrigin: 'center center' })
+        gsap.set([eyebrowRef.current, titleRef.current, subtitleRef.current], { opacity: 0, y: 60, filter: 'blur(8px)' })
+        gsap.set(buttonsRef.current, { opacity: 1, filter: 'blur(0px)' })
+        gsap.set(buttons, { opacity: 0, y: 26, filter: 'blur(6px)' })
+        gsap.set(metricsRef.current, { opacity: 0, y: 30, filter: 'blur(8px)' })
+        gsap.set(accountCardRef.current, {
+          opacity: 0,
+          x: 72,
+          y: 80,
+          rotateX: 8,
+          rotateY: -5,
+          scale: 0.86,
+          filter: 'blur(8px)',
+          transformOrigin: 'center center',
+          transformPerspective: 900,
+        })
+        tags.forEach((tag, index) => {
+          const offsets = [
+            { x: -20, y: 10 },
+            { x: 18, y: -8 },
+            { x: -16, y: 18 },
+            { x: 18, y: 18 },
+            { x: 0, y: 24 },
+          ][index] ?? { x: 0, y: 18 }
+          gsap.set(tag, {
+            opacity: 0,
+            x: offsets.x,
+            y: offsets.y,
+            scale: 0.92,
+            filter: 'blur(6px)',
+            transformOrigin: 'center center',
+          })
+        })
         gsap.set(scannerRef.current, { opacity: 0, yPercent: -130 })
         gsap.set(verifiedRef.current, { opacity: 0, scale: 0.8, transformOrigin: 'center center' })
         gsap.set(shineRef.current, { opacity: 0, xPercent: -130 })
 
         const timeline = gsap.timeline({
-          defaults: { ease: 'power2.out' },
+          defaults: { ease: 'power3.out' },
           scrollTrigger: {
             trigger: heroRef.current,
             start: 'top top',
-            end: '+=1800',
-            scrub: true,
+            end: '+=2200',
+            scrub: 1.3,
             pin: true,
             anticipatePin: 1,
             invalidateOnRefresh: true,
@@ -146,19 +220,43 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
         })
 
         timeline
-          .to(eyebrowRef.current, { opacity: 1, y: 0, duration: 0.35 })
-          .to(titleRef.current, { opacity: 1, y: 0, duration: 0.72 }, '>-0.04')
-          .to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.48 }, '>-0.05')
-          .to(buttonsRef.current, { opacity: 1, y: 0, duration: 0.42 }, '>-0.04')
-          .to(metricsRef.current, { opacity: 1, y: 0, duration: 0.32 }, '>-0.02')
-          .to(accountCardRef.current, { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.8 }, '>-0.08')
-          .to(tags, { opacity: 1, y: 0, scale: 1, stagger: 0.1, duration: 0.62 }, '>-0.04')
-          .to(scannerRef.current, { opacity: 0.7, yPercent: 360, duration: 0.75, ease: 'none' }, '>-0.02')
-          .to(scannerRef.current, { opacity: 0, duration: 0.18 }, '>-0.06')
-          .to(verifiedRef.current, { opacity: 1, scale: 1, duration: 0.38 }, '>-0.08')
-          .to(shineRef.current, { opacity: 0.55, xPercent: 135, duration: 0.68, ease: 'none' }, '>-0.06')
-          .to(shineRef.current, { opacity: 0, duration: 0.22 }, '>-0.04')
-          .to(accountCardRef.current, { scale: 1.025, duration: 0.5, ease: 'power1.inOut' }, '<')
+          .fromTo(blueGlowRef.current, { opacity: 0.18, y: 40, x: -10 }, { opacity: 0.58, y: -80, x: 26, duration: 5.1, ease: 'none' }, 0)
+          .fromTo(greenGlowRef.current, { opacity: 0.1, y: -20, x: -18 }, { opacity: 0.38, y: 60, x: 42, duration: 5.1, ease: 'none' }, 0)
+          .to(gridRef.current, { opacity: 0.09, y: -42, x: 18, duration: 5.1, ease: 'none' }, 0)
+          .to(shapeRef.current, { opacity: 0.26, y: 44, x: -24, rotate: 6, duration: 5.1, ease: 'none' }, 0)
+          .to(eyebrowRef.current, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.44, ease: 'power3.out' }, 0.22)
+          .to(titleRef.current, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.84, ease: 'power4.out' }, '>-0.08')
+          .to(subtitleRef.current, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.58, ease: 'power3.out' }, '>-0.1')
+          .to(buttons, { opacity: 1, y: 0, filter: 'blur(0px)', stagger: 0.08, duration: 0.46, ease: 'power3.out' }, '>-0.06')
+          .to(metricsRef.current, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.42, ease: 'power3.out' }, '>-0.04')
+          .to(accountCardRef.current, {
+            opacity: 1,
+            x: 0,
+            y: 0,
+            rotateX: 0,
+            rotateY: 0,
+            scale: 1,
+            filter: 'blur(0px)',
+            duration: 0.95,
+            ease: 'expo.out',
+          }, '>-0.08')
+          .to(tags, {
+            opacity: 1,
+            x: 0,
+            y: 0,
+            scale: 1,
+            filter: 'blur(0px)',
+            stagger: 0.1,
+            duration: 0.64,
+            ease: 'power3.out',
+          }, '>-0.05')
+          .to(scannerRef.current, { opacity: 0.62, yPercent: 350, duration: 0.9, ease: 'none' }, '>-0.03')
+          .to(scannerRef.current, { opacity: 0, duration: 0.22, ease: 'power2.out' }, '>-0.08')
+          .to(verifiedRef.current, { opacity: 1, scale: 1, duration: 0.42, ease: 'back.out(1.2)' }, '>-0.07')
+          .to(shineRef.current, { opacity: 0.5, xPercent: 140, duration: 0.78, ease: 'none' }, '>-0.06')
+          .to(shineRef.current, { opacity: 0, duration: 0.24, ease: 'power2.out' }, '>-0.05')
+          .to(accountCardRef.current, { scale: 1.018, duration: 0.74, ease: 'none' }, '<')
+          .to([titleRef.current, accountCardRef.current], { opacity: 1, duration: 0.5, ease: 'none' }, '>')
 
         ScrollTrigger.refresh()
 
@@ -178,8 +276,11 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
 
   return (
     <section ref={heroRef} className="relative min-h-[calc(100svh-3.5rem)] overflow-hidden bg-[#05070F]">
-      <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(20,99,255,0.14),transparent_34%),linear-gradient(235deg,rgba(34,197,94,0.1),transparent_35%),linear-gradient(180deg,#071121,#05070F_60%,#05070F)]" />
-      <div className="absolute inset-0 bg-grid-fade bg-[length:56px_56px] opacity-[0.055]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,#071121,#05070F_60%,#05070F)]" />
+      <div ref={blueGlowRef} className="absolute -left-40 top-6 h-[520px] w-[520px] rounded-full bg-blue-500/24 blur-[96px]" />
+      <div ref={greenGlowRef} className="absolute right-[-120px] top-28 h-[360px] w-[360px] rounded-full bg-emerald-400/16 blur-[90px]" />
+      <div ref={shapeRef} className="absolute right-[18%] top-[18%] hidden h-44 w-44 rotate-12 rounded-[44px] border border-blue-300/12 bg-white/[0.025] blur-[0.2px] lg:block" />
+      <div ref={gridRef} className="absolute inset-0 bg-grid-fade bg-[length:56px_56px] opacity-[0.055]" />
       <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/30 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#05070F] to-transparent" />
 
@@ -200,7 +301,7 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
             <button
               type="button"
               onClick={() => onNavigate('explore')}
-              className="acc-button-primary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5 sm:whitespace-nowrap"
+              className="acc-button-primary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition duration-300 hover:-translate-y-0.5 active:scale-[0.98] sm:whitespace-nowrap"
             >
               Explorar contas
               <ChevronRight aria-hidden="true" className="size-4" />
@@ -208,7 +309,7 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
             <button
               type="button"
               onClick={() => onNavigate('sell')}
-              className="acc-button-secondary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5 sm:whitespace-nowrap"
+              className="acc-button-secondary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition duration-300 hover:-translate-y-0.5 active:scale-[0.98] sm:whitespace-nowrap"
             >
               <Store aria-hidden="true" className="size-4" />
               Quero vender minha conta
@@ -300,7 +401,7 @@ function HeroAccountShowcase({
 
             <div className="grid grid-cols-2 gap-2">
               {heroTags.map((tag) => (
-                <span key={tag} className="rounded-xl border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200 last:col-span-2">
+                <span key={tag} className="rounded-xl border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200 transition duration-300 hover:scale-[1.02] hover:border-blue-300/25 last:col-span-2">
                   {tag}
                 </span>
               ))}
@@ -325,9 +426,9 @@ function HeroAccountShowcase({
             [
               '-left-8 top-16',
               '-right-3 top-28',
-              'left-0 top-[62%]',
-              'right-0 top-[66%]',
-              'left-1/2 bottom-0 -translate-x-1/2',
+              '-left-5 bottom-5',
+              'right-7 bottom-7',
+              'left-[35%] bottom-[-22px]',
             ][index],
           )}
           style={{ animationDelay: `${index * 0.45}s` }}
@@ -338,7 +439,7 @@ function HeroAccountShowcase({
 
       <div className="mt-4 flex flex-wrap justify-center gap-2 md:hidden">
         {heroTags.map((tag) => (
-          <span key={tag} className="rounded-full border border-blue-300/16 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200">
+          <span key={tag} className="rounded-full border border-blue-300/16 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200 transition duration-300 hover:scale-[1.02]">
             {tag}
           </span>
         ))}
@@ -361,7 +462,7 @@ function FeaturedAccountsSection({
         title="Uma prévia selecionada para começar"
         description="A Home mostra quatro exemplos de perfis. O catálogo completo fica em Explorar."
         action={
-          <button type="button" onClick={() => onNavigate('explore')} className="acc-button-secondary inline-flex min-h-10 items-center gap-2 px-4 text-sm font-black transition">
+          <button type="button" onClick={() => onNavigate('explore')} className="acc-button-secondary inline-flex min-h-10 items-center gap-2 px-4 text-sm font-black transition duration-300 active:scale-[0.98]">
             Ver catálogo completo
             <ChevronRight aria-hidden="true" className="size-4" />
           </button>
@@ -403,10 +504,11 @@ function ShowcaseAccountCard({
   return (
     <motion.article
       variants={fadeUp}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-      whileHover={{ y: -5, scale: 1.01 }}
-      className="group overflow-hidden rounded-2xl border border-blue-300/14 bg-[linear-gradient(145deg,rgba(16,24,39,0.86),rgba(7,11,22,0.94))] shadow-[0_18px_58px_rgba(0,0,0,0.22)] transition duration-300 hover:border-blue-300/34 hover:shadow-[0_22px_70px_rgba(20,99,255,0.13)]"
+      transition={{ duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -6, scale: 1.015 }}
+      className="group relative overflow-hidden rounded-2xl border border-blue-300/14 bg-[linear-gradient(145deg,rgba(16,24,39,0.86),rgba(7,11,22,0.94))] shadow-[0_18px_58px_rgba(0,0,0,0.22)] transition duration-500 hover:border-blue-300/34 hover:shadow-[0_22px_70px_rgba(20,99,255,0.16)]"
     >
+      <span className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100 bg-[radial-gradient(circle_at_50%_0%,rgba(56,189,248,0.13),transparent_42%)]" />
       <div className="relative aspect-[4/3] overflow-hidden border-b border-white/10 bg-[#08111f]">
         <div
           className={cn(
@@ -461,12 +563,12 @@ function ShowcaseAccountCard({
                 href={supportWhatsappUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-10 items-center justify-center rounded-full border border-emerald-300/24 bg-emerald-500/10 px-3 text-xs font-black text-emerald-100 transition hover:border-emerald-300"
+                className="inline-flex min-h-10 items-center justify-center rounded-full border border-emerald-300/24 bg-emerald-500/10 px-3 text-xs font-black text-emerald-100 transition duration-300 hover:-translate-y-0.5 hover:border-emerald-300 active:scale-[0.98]"
               >
                 WhatsApp
               </a>
             ) : null}
-            <button type="button" onClick={onExplore} className="acc-button-primary inline-flex min-h-10 items-center px-4 text-xs font-black transition">
+            <button type="button" onClick={onExplore} className="acc-button-primary inline-flex min-h-10 items-center px-4 text-xs font-black transition active:scale-[0.98]">
               Ver detalhes
             </button>
           </div>
@@ -489,8 +591,8 @@ function HowItWorksSection() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.35 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="relative rounded-2xl border border-blue-300/16 bg-white/[0.035] p-5 backdrop-blur transition hover:border-blue-300/30 hover:bg-blue-500/7"
+            transition={{ duration: 0.58, delay: index * 0.09, ease: [0.22, 1, 0.36, 1] }}
+            className="relative rounded-2xl border border-blue-300/16 bg-white/[0.035] p-5 backdrop-blur transition duration-500 hover:-translate-y-1.5 hover:border-blue-300/30 hover:bg-blue-500/7"
           >
             <span className="flex size-14 items-center justify-center rounded-2xl border border-blue-300/25 bg-blue-500/12 text-blue-200 shadow-[0_0_30px_rgba(20,149,255,0.12)]">
               <step.icon aria-hidden="true" className="size-6" />
@@ -517,9 +619,10 @@ function TrustSection() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.25 }}
-            transition={{ duration: 0.45, delay: index * 0.04 }}
-            className="group rounded-2xl border border-blue-300/14 bg-[linear-gradient(145deg,rgba(16,24,39,0.72),rgba(7,11,22,0.8))] p-5 transition hover:-translate-y-1 hover:border-blue-300/34 hover:bg-blue-500/8"
+            transition={{ duration: 0.56, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+            className="group relative overflow-hidden rounded-2xl border border-blue-300/14 bg-[linear-gradient(145deg,rgba(16,24,39,0.72),rgba(7,11,22,0.8))] p-5 transition duration-500 hover:-translate-y-1.5 hover:border-blue-300/34 hover:bg-blue-500/8"
           >
+            <span className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100 bg-[radial-gradient(circle_at_30%_0%,rgba(56,189,248,0.12),transparent_42%)]" />
             <span className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.045] text-blue-200 transition group-hover:text-emerald-200">
               <card.icon aria-hidden="true" className="size-5" />
             </span>
@@ -548,7 +651,7 @@ function CategoriesSection({ onNavigate }: { onNavigate: (view: AppView) => void
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.42, delay: index * 0.04 }}
             whileHover={{ y: -3, scale: 1.02 }}
-            className="group inline-flex min-h-12 items-center gap-2 rounded-full border border-blue-300/18 bg-white/[0.04] px-5 text-sm font-black text-slate-200 shadow-[0_12px_38px_rgba(0,0,0,0.16)] transition hover:border-blue-300/44 hover:text-white"
+            className="group inline-flex min-h-12 items-center gap-2 rounded-full border border-blue-300/18 bg-white/[0.04] px-5 text-sm font-black text-slate-200 shadow-[0_12px_38px_rgba(0,0,0,0.16)] transition duration-300 hover:border-blue-300/44 hover:text-white active:scale-[0.98]"
           >
             <span className="size-2 rounded-full bg-blue-300 shadow-[0_0_16px_rgba(56,189,248,0.7)] transition group-hover:bg-emerald-300" />
             {category}
@@ -568,7 +671,7 @@ function FinalCta({ onNavigate }: { onNavigate: (view: AppView) => void }) {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.35 }}
-        transition={{ duration: 0.55 }}
+        transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
         className="relative mx-auto max-w-4xl rounded-3xl border border-blue-300/20 bg-[linear-gradient(145deg,rgba(16,24,39,0.86),rgba(7,11,22,0.92))] p-6 text-center shadow-[0_26px_100px_rgba(20,99,255,0.16)] sm:p-10"
       >
         <span className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-emerald-300/22 bg-emerald-500/12 text-emerald-200">
@@ -578,7 +681,7 @@ function FinalCta({ onNavigate }: { onNavigate: (view: AppView) => void }) {
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
           Explore contas com itens raros, passes antigos, armas evolutivas e vendedores verificados.
         </p>
-        <button type="button" onClick={() => onNavigate('explore')} className="acc-button-primary mt-7 inline-flex min-h-12 items-center gap-2 px-7 text-sm font-black transition hover:-translate-y-0.5">
+        <button type="button" onClick={() => onNavigate('explore')} className="acc-button-primary mt-7 inline-flex min-h-12 items-center gap-2 px-7 text-sm font-black transition duration-300 hover:-translate-y-0.5 active:scale-[0.98]">
           Explorar contas
           <ChevronRight aria-hidden="true" className="size-4" />
         </button>
@@ -603,7 +706,7 @@ function SectionHeader({ eyebrow, title, description, action }: { eyebrow: strin
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.35 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
     >
       <div>

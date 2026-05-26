@@ -36,6 +36,27 @@ html {
   scroll-behavior: smooth;
 }
 
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+html.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+
+.lenis [data-lenis-prevent],
+.lenis [data-lenis-prevent-wheel],
+.lenis [data-lenis-prevent-touch],
+.lenis [data-lenis-prevent-vertical],
+.lenis [data-lenis-prevent-horizontal] {
+  overscroll-behavior: contain;
+}
+
 body {
   min-width: 320px;
   min-height: 100svh;
@@ -145,10 +166,16 @@ video {
   background: linear-gradient(135deg, var(--acc-blue), var(--acc-blue-bright));
   color: #fff;
   box-shadow: 0 14px 34px rgba(0, 112, 209, 0.28);
+  transition:
+    transform 0.28s ease,
+    filter 0.28s ease,
+    box-shadow 0.28s ease;
 }
 
 .acc-button-primary:hover {
   filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 44px rgba(20, 149, 255, 0.34);
 }
 
 .acc-button-commerce {
@@ -163,12 +190,24 @@ video {
   border-radius: 999px;
   background: rgba(16, 24, 39, 0.72);
   color: #e7edf7;
+  transition:
+    transform 0.28s ease,
+    border-color 0.28s ease,
+    background-color 0.28s ease,
+    box-shadow 0.28s ease;
 }
 
 .acc-button-secondary:hover {
   border-color: rgba(20, 149, 255, 0.5);
   background: rgba(20, 99, 255, 0.12);
   color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 38px rgba(20, 99, 255, 0.16);
+}
+
+.acc-button-primary:active,
+.acc-button-secondary:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .acc-badge {
@@ -236,7 +275,15 @@ video {
 }
 
 .acc-home-float {
-  animation: acc-home-float 7s ease-in-out infinite;
+  animation: acc-home-float 6s ease-in-out infinite alternate;
+  transition:
+    transform 0.35s ease,
+    border-color 0.35s ease,
+    background-color 0.35s ease;
+}
+
+.acc-home-float:hover {
+  transform: scale(1.035);
 }
 
 @keyframes acc-home-float {
