@@ -42,17 +42,17 @@ type ShowcaseAccount = {
 const homeAssets = {
   heroBackground: '/assets/accstore/home/hero-battle-royale-bg.png',
   cardBanner: '/assets/accstore/home/card-banner.png',
-  angelicalPants: '/assets/accstore/home/angelical-pants.png',
-  bandeirao: '/assets/accstore/home/bandeirao.png',
-  evolutiveSmg: '/assets/accstore/home/evolutive-smg.png',
+  angelicalPants: '/assets/accstore/home/angelical-pants-clean.png',
+  bandeirao: '/assets/accstore/home/bandeirao-clean.png',
+  evolutiveSmg: '/assets/accstore/home/evolutive-smg-clean.png',
 }
 
 const heroTags = ['Itens raros', 'Bandeirão', 'Armas evolutivas', 'Contas antigas', 'Vendedor verificado']
 
 const premiumAccountItems = [
-  { label: 'Calça Angelical Branca', src: homeAssets.angelicalPants, imageClassName: 'max-h-40 sm:max-h-48' },
-  { label: 'Bandeirão', src: homeAssets.bandeirao, imageClassName: 'max-h-40 sm:max-h-48' },
-  { label: 'MP40 Cobra', subtitle: 'Arma evolutiva', src: homeAssets.evolutiveSmg, imageClassName: 'max-h-28 w-full scale-125 sm:max-h-36' },
+  { label: 'Calça Angelical Branca', src: homeAssets.angelicalPants, imageClassName: 'max-h-44 sm:max-h-56' },
+  { label: 'Bandeirão', src: homeAssets.bandeirao, imageClassName: 'max-h-44 sm:max-h-56' },
+  { label: 'MP40 Cobra', subtitle: 'Arma evolutiva', src: homeAssets.evolutiveSmg, imageClassName: 'max-h-32 w-full scale-[1.34] sm:max-h-40' },
 ]
 
 const showcaseAccounts: ShowcaseAccount[] = [
@@ -275,25 +275,25 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
 
   return (
     <section ref={heroRef} className="relative min-h-[calc(100svh-3.5rem)] overflow-hidden bg-[#05070F]">
-      <img src={homeAssets.heroBackground} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover object-center opacity-100" />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,5,11,0.72)_0%,rgba(3,5,11,0.38)_44%,rgba(3,5,11,0.16)_72%,rgba(3,5,11,0.45)_100%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,11,0.14),rgba(3,5,11,0.02)_46%,rgba(5,7,15,0.86)_100%)]" />
-      <div ref={blueGlowRef} className="absolute -left-36 top-5 h-[540px] w-[540px] rounded-full bg-blue-500/20 blur-[96px]" />
-      <div ref={greenGlowRef} className="absolute right-[-120px] top-28 h-[360px] w-[360px] rounded-full bg-emerald-400/14 blur-[90px]" />
+      <img src={homeAssets.heroBackground} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover object-center opacity-100 brightness-[1.08] contrast-[1.08] saturate-[1.18]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,5,11,0.5)_0%,rgba(3,5,11,0.2)_42%,rgba(3,5,11,0.04)_70%,rgba(3,5,11,0.22)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,11,0.06),rgba(3,5,11,0)_48%,rgba(5,7,15,0.7)_100%)]" />
+      <div ref={blueGlowRef} className="absolute -left-36 top-5 h-[540px] w-[540px] rounded-full bg-blue-500/14 blur-[96px]" />
+      <div ref={greenGlowRef} className="absolute right-[-120px] top-28 h-[360px] w-[360px] rounded-full bg-emerald-400/10 blur-[90px]" />
       <div ref={shapeRef} className="absolute right-[18%] top-[18%] hidden h-44 w-44 rotate-12 rounded-[44px] border border-yellow-300/12 bg-white/[0.025] blur-[0.2px] lg:block" />
       <div ref={gridRef} className="absolute inset-0 bg-grid-fade bg-[length:56px_56px] opacity-[0.035]" />
       <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/30 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#05070F] to-transparent" />
 
-      <div className="relative mx-auto grid min-h-[calc(100svh-3.5rem)] w-full max-w-[1540px] items-center gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(360px,0.86fr)_minmax(470px,1fr)] xl:grid-cols-[45%_50%] xl:gap-12 2xl:px-8">
+      <div className="relative mx-auto grid min-h-[calc(100svh-3.5rem)] w-full max-w-[1600px] items-center gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(390px,0.84fr)_minmax(520px,1fr)] xl:grid-cols-[45%_50%] xl:gap-12 2xl:px-8">
         <div className="max-w-3xl lg:pl-2 xl:pl-8">
           <span ref={eyebrowRef} className="inline-flex min-h-8 items-center gap-2 rounded-full border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-[0.12em] text-blue-200">
             <Sparkles aria-hidden="true" className="size-3.5" />
             Contas antigas e itens raros
           </span>
-          <h1 ref={titleRef} aria-label="Sua próxima conta está aqui" className="mt-5 max-w-4xl text-[42px] font-black leading-[0.98] tracking-normal text-white sm:text-[66px] lg:text-[82px]">
+          <h1 ref={titleRef} aria-label="Sua próxima conta está aqui" className="mt-5 max-w-4xl text-[50px] font-black leading-[0.86] tracking-normal text-white drop-shadow-[0_12px_38px_rgba(0,0,0,0.62)] sm:text-[78px] lg:text-[96px] xl:text-[112px]">
             <span aria-hidden="true" className="block">Sua próxima</span>
-            <span aria-hidden="true" className="acc-home-title-brush block">conta</span>
+            <span aria-hidden="true" className="acc-home-title-brush -my-2 block text-[1.38em] leading-[0.76] sm:-my-3">conta</span>
             <span aria-hidden="true" className="block">está aqui</span>
           </h1>
           <p ref={subtitleRef} className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
@@ -304,7 +304,7 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
             <button
               type="button"
               onClick={() => onNavigate('explore')}
-              className="acc-button-hero-gold inline-flex min-h-12 items-center justify-center gap-2 px-7 text-sm font-black transition duration-300 hover:-translate-y-0.5 active:scale-[0.98] sm:whitespace-nowrap"
+              className="acc-button-hero-gold inline-flex min-h-14 items-center justify-center gap-2 px-8 text-base font-black transition duration-300 hover:-translate-y-0.5 active:scale-[0.98] sm:whitespace-nowrap"
             >
               Explorar contas
               <ChevronRight aria-hidden="true" className="size-4" />
@@ -312,7 +312,7 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
             <button
               type="button"
               onClick={() => onNavigate('sell')}
-              className="acc-button-secondary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition duration-300 hover:-translate-y-0.5 active:scale-[0.98] sm:whitespace-nowrap"
+              className="acc-button-secondary inline-flex min-h-14 items-center justify-center gap-2 border-white/30 px-7 text-sm font-black transition duration-300 hover:-translate-y-0.5 active:scale-[0.98] sm:whitespace-nowrap"
             >
               <Store aria-hidden="true" className="size-4" />
               Quero vender minha conta
@@ -349,17 +349,17 @@ function HeroAccountShowcase({
   shineRef: RefObject<HTMLSpanElement | null>
 }) {
   return (
-    <div className="relative min-h-[560px] lg:min-h-[720px]">
+    <div className="relative min-h-[620px] lg:min-h-[760px]">
       <div
         ref={cardRef}
-        className="group/home-card relative mx-auto w-full max-w-[680px] overflow-hidden rounded-[30px] border border-violet-400/60 bg-[linear-gradient(145deg,rgba(8,12,23,0.88),rgba(3,7,14,0.98))] shadow-[0_0_0_1px_rgba(250,204,21,0.32),0_0_46px_rgba(168,85,247,0.42),0_30px_110px_rgba(0,0,0,0.58)] backdrop-blur-xl transition duration-500 hover:border-yellow-300/70 hover:shadow-[0_0_0_1px_rgba(250,204,21,0.52),0_0_62px_rgba(168,85,247,0.5),0_34px_120px_rgba(0,0,0,0.64)]"
+        className="group/home-card relative mx-auto w-full max-w-[720px] overflow-hidden rounded-[32px] border border-fuchsia-400/75 bg-[linear-gradient(145deg,rgba(7,10,20,0.9),rgba(2,5,12,0.99))] shadow-[0_0_0_1px_rgba(250,204,21,0.42),0_0_34px_rgba(250,204,21,0.2),0_0_72px_rgba(168,85,247,0.56),0_34px_130px_rgba(0,0,0,0.68)] backdrop-blur-xl transition duration-500 hover:border-yellow-300/80 hover:shadow-[0_0_0_1px_rgba(250,204,21,0.62),0_0_46px_rgba(250,204,21,0.25),0_0_86px_rgba(168,85,247,0.62),0_38px_140px_rgba(0,0,0,0.74)]"
       >
         <span ref={scannerRef} className="acc-home-scanner scanner-line" aria-hidden="true" />
         <span ref={shineRef} className="acc-home-card-shine" aria-hidden="true" />
-        <div className="relative overflow-hidden rounded-[29px] bg-[#050912]">
-          <div className="relative h-[190px] overflow-hidden border-b border-violet-300/24 sm:h-[250px] xl:h-[280px]">
-            <img src={homeAssets.cardBanner} alt="" aria-hidden="true" className="h-full w-full object-cover object-center" />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,11,0.08),rgba(3,5,11,0.52)),linear-gradient(90deg,rgba(124,58,237,0.2),transparent_42%,rgba(250,204,21,0.16))]" />
+        <div className="relative overflow-hidden rounded-[31px] bg-[linear-gradient(180deg,#050912,#02050c)]">
+          <div className="relative h-[220px] overflow-hidden border-b border-violet-300/24 sm:h-[290px] xl:h-[320px]">
+            <img src={homeAssets.cardBanner} alt="" aria-hidden="true" className="h-full w-full object-cover object-center brightness-[1.08] contrast-[1.08] saturate-[1.14]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,11,0),rgba(3,5,11,0.26)),linear-gradient(90deg,rgba(124,58,237,0.12),transparent_44%,rgba(250,204,21,0.1))]" />
             <p className="absolute left-5 top-4 rounded-br-2xl border-b border-r border-violet-300/28 bg-black/48 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-fuchsia-200 backdrop-blur sm:left-6 sm:text-sm">
               CONTA FF VERIFICADA
             </p>
@@ -373,7 +373,7 @@ function HeroAccountShowcase({
           </div>
 
           <div className="relative space-y-5 p-4 sm:p-5">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,rgba(168,85,247,0.2),transparent_34%),radial-gradient(circle_at_88%_20%,rgba(250,204,21,0.13),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.035),transparent)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,rgba(168,85,247,0.24),transparent_34%),radial-gradient(circle_at_88%_20%,rgba(250,204,21,0.16),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.045),transparent)]" />
             <div>
               <h2 className="relative text-2xl font-black leading-tight text-white sm:text-3xl">Conta antiga com itens raros</h2>
               <p className="relative mt-2 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">
@@ -383,8 +383,8 @@ function HeroAccountShowcase({
 
             <div className="relative grid grid-cols-1 gap-2 min-[520px]:grid-cols-3">
                 {premiumAccountItems.map((item) => (
-                  <div key={item.label} className="acc-home-item-card group/item rounded-xl border border-white/12 bg-black/28 p-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition duration-300 hover:-translate-y-1 hover:border-yellow-300/38 hover:bg-white/[0.055]">
-                    <div className="flex h-36 items-center justify-center rounded-lg bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,0.08),transparent_62%)] p-1 sm:h-44">
+                  <div key={item.label} className="acc-home-item-card group/item rounded-xl border border-white/14 bg-[linear-gradient(180deg,rgba(5,13,24,0.94),rgba(0,0,0,0.42))] p-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_28px_rgba(0,0,0,0.24)] transition duration-300 hover:-translate-y-1 hover:border-yellow-300/42 hover:bg-white/[0.055] sm:p-3">
+                    <div className="flex h-40 items-center justify-center rounded-lg bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,0.1),transparent_64%)] p-0 sm:h-52">
                       <img src={item.src} alt={item.label} className={cn('max-w-full object-contain drop-shadow-[0_18px_34px_rgba(0,0,0,0.48)] transition duration-300 group-hover/item:scale-[1.04]', item.imageClassName)} />
                     </div>
                     <p className="mt-3 text-sm font-black leading-5 text-white">{item.label}</p>
