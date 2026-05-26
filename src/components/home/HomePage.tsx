@@ -18,7 +18,7 @@ import { motion } from 'framer-motion'
 import gsap from 'gsap'
 import Lenis from 'lenis'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { useEffect, useRef, type MutableRefObject, type ReactNode, type RefObject } from 'react'
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
 import type { AppView } from '../../lib/navigation'
 import { formatBRL } from '../../lib/format'
 import { cn } from '../../lib/utils'
@@ -41,6 +41,7 @@ type ShowcaseAccount = {
 
 const homeAssets = {
   heroBackground: '/assets/accstore/home/hero-battle-royale-bg.png',
+  cardBanner: '/assets/accstore/home/card-banner.png',
   angelicalPants: '/assets/accstore/home/angelical-pants.png',
   bandeirao: '/assets/accstore/home/bandeirao.png',
   evolutiveSmg: '/assets/accstore/home/evolutive-smg.png',
@@ -49,9 +50,9 @@ const homeAssets = {
 const heroTags = ['Itens raros', 'Bandeirão', 'Armas evolutivas', 'Contas antigas', 'Vendedor verificado']
 
 const premiumAccountItems = [
-  { label: 'Calça Angelical Branca', src: homeAssets.angelicalPants },
-  { label: 'Bandeirão', src: homeAssets.bandeirao },
-  { label: 'Arma evolutiva', src: homeAssets.evolutiveSmg },
+  { label: 'Calça Angelical Branca', src: homeAssets.angelicalPants, imageClassName: 'max-h-40 sm:max-h-48' },
+  { label: 'Bandeirão', src: homeAssets.bandeirao, imageClassName: 'max-h-40 sm:max-h-48' },
+  { label: 'MP40 Cobra', subtitle: 'Arma evolutiva', src: homeAssets.evolutiveSmg, imageClassName: 'max-h-28 w-full scale-125 sm:max-h-36' },
 ]
 
 const showcaseAccounts: ShowcaseAccount[] = [
@@ -149,7 +150,6 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
   const verifiedRef = useRef<HTMLDivElement | null>(null)
   const scannerRef = useRef<HTMLSpanElement | null>(null)
   const shineRef = useRef<HTMLSpanElement | null>(null)
-  const tagRefs = useRef<HTMLSpanElement[]>([])
   const blueGlowRef = useRef<HTMLDivElement | null>(null)
   const greenGlowRef = useRef<HTMLDivElement | null>(null)
   const gridRef = useRef<HTMLDivElement | null>(null)
@@ -169,19 +169,21 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
           buttonsRef.current,
           metricsRef.current,
         ].filter(Boolean) as HTMLElement[]
-      const tagItems = () => tagRefs.current.filter(Boolean)
+      const itemItems = () => Array.from(heroRef.current?.querySelectorAll<HTMLElement>('.acc-home-item-card') ?? [])
       const visibleItems = () =>
         [
           ...copyItems(),
           ...buttonItems(),
           accountCardRef.current,
           verifiedRef.current,
-          ...tagItems(),
+          ...itemItems(),
         ].filter(Boolean) as HTMLElement[]
 
       media.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
         const buttons = buttonItems()
-        const tags = tagItems()
+        const items = itemItems()
+        const titleAccent = titleRef.current?.querySelector<HTMLElement>('.acc-home-title-brush')
+        const titleAccentTargets = titleAccent ? [titleAccent] : []
 
         gsap.set([eyebrowRef.current, titleRef.current, subtitleRef.current], { opacity: 1, y: 0, filter: 'blur(0px)' })
         gsap.set(buttonsRef.current, { opacity: 1, filter: 'blur(0px)' })
@@ -198,23 +200,7 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
           transformOrigin: 'center center',
           transformPerspective: 900,
         })
-        tags.forEach((tag, index) => {
-          const offsets = [
-            { x: -20, y: 10 },
-            { x: 18, y: -8 },
-            { x: -16, y: 18 },
-            { x: 18, y: 18 },
-            { x: 0, y: 24 },
-          ][index] ?? { x: 0, y: 18 }
-          gsap.set(tag, {
-            opacity: 0,
-            x: offsets.x,
-            y: offsets.y,
-            scale: 0.92,
-            filter: 'blur(6px)',
-            transformOrigin: 'center center',
-          })
-        })
+        gsap.set(items, { opacity: 0, y: 22, scale: 0.94, filter: 'blur(6px)', transformOrigin: 'center center' })
         gsap.set(scannerRef.current, { opacity: 0, yPercent: -130 })
         gsap.set(verifiedRef.current, { opacity: 0, scale: 0.8, transformOrigin: 'center center' })
         gsap.set(shineRef.current, { opacity: 0, xPercent: -130 })
@@ -237,6 +223,7 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
           .fromTo(greenGlowRef.current, { opacity: 0.1, y: -20, x: -18 }, { opacity: 0.38, y: 60, x: 42, duration: 5.1, ease: 'none' }, 0)
           .to(gridRef.current, { opacity: 0.09, y: -42, x: 18, duration: 5.1, ease: 'none' }, 0)
           .to(shapeRef.current, { opacity: 0.26, y: 44, x: -24, rotate: 6, duration: 5.1, ease: 'none' }, 0)
+          .fromTo(titleAccentTargets, { scale: 0.96 }, { scale: 1.04, duration: 0.62, ease: 'power3.out' }, 0.36)
           .to(eyebrowRef.current, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.44, ease: 'power3.out' }, 0.22)
           .to(titleRef.current, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.84, ease: 'power4.out' }, '>-0.08')
           .to(subtitleRef.current, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.58, ease: 'power3.out' }, '>-0.1')
@@ -253,14 +240,13 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
             duration: 0.95,
             ease: 'expo.out',
           }, '>-0.08')
-          .to(tags, {
+          .to(items, {
             opacity: 1,
-            x: 0,
             y: 0,
             scale: 1,
             filter: 'blur(0px)',
             stagger: 0.1,
-            duration: 0.64,
+            duration: 0.54,
             ease: 'power3.out',
           }, '>-0.05')
           .to(scannerRef.current, { opacity: 0.62, yPercent: 350, duration: 0.9, ease: 'none' }, '>-0.03')
@@ -289,18 +275,18 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
 
   return (
     <section ref={heroRef} className="relative min-h-[calc(100svh-3.5rem)] overflow-hidden bg-[#05070F]">
-      <img src={homeAssets.heroBackground} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover opacity-85" />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,7,15,0.94)_0%,rgba(5,7,15,0.64)_44%,rgba(5,7,15,0.34)_72%,rgba(5,7,15,0.72)_100%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,7,15,0.22),rgba(5,7,15,0.12)_52%,#05070F_100%)]" />
-      <div ref={blueGlowRef} className="absolute -left-40 top-6 h-[520px] w-[520px] rounded-full bg-blue-500/24 blur-[96px]" />
-      <div ref={greenGlowRef} className="absolute right-[-120px] top-28 h-[360px] w-[360px] rounded-full bg-emerald-400/16 blur-[90px]" />
-      <div ref={shapeRef} className="absolute right-[18%] top-[18%] hidden h-44 w-44 rotate-12 rounded-[44px] border border-blue-300/12 bg-white/[0.025] blur-[0.2px] lg:block" />
-      <div ref={gridRef} className="absolute inset-0 bg-grid-fade bg-[length:56px_56px] opacity-[0.055]" />
+      <img src={homeAssets.heroBackground} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover object-center opacity-100" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,5,11,0.72)_0%,rgba(3,5,11,0.38)_44%,rgba(3,5,11,0.16)_72%,rgba(3,5,11,0.45)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,11,0.14),rgba(3,5,11,0.02)_46%,rgba(5,7,15,0.86)_100%)]" />
+      <div ref={blueGlowRef} className="absolute -left-36 top-5 h-[540px] w-[540px] rounded-full bg-blue-500/20 blur-[96px]" />
+      <div ref={greenGlowRef} className="absolute right-[-120px] top-28 h-[360px] w-[360px] rounded-full bg-emerald-400/14 blur-[90px]" />
+      <div ref={shapeRef} className="absolute right-[18%] top-[18%] hidden h-44 w-44 rotate-12 rounded-[44px] border border-yellow-300/12 bg-white/[0.025] blur-[0.2px] lg:block" />
+      <div ref={gridRef} className="absolute inset-0 bg-grid-fade bg-[length:56px_56px] opacity-[0.035]" />
       <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/30 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#05070F] to-transparent" />
 
-      <div className="relative mx-auto grid min-h-[calc(100svh-3.5rem)] w-full max-w-7xl items-center gap-10 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(480px,1fr)] lg:px-7">
-        <div className="max-w-3xl">
+      <div className="relative mx-auto grid min-h-[calc(100svh-3.5rem)] w-full max-w-[1540px] items-center gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(360px,0.86fr)_minmax(470px,1fr)] xl:grid-cols-[45%_50%] xl:gap-12 2xl:px-8">
+        <div className="max-w-3xl lg:pl-2 xl:pl-8">
           <span ref={eyebrowRef} className="inline-flex min-h-8 items-center gap-2 rounded-full border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-[0.12em] text-blue-200">
             <Sparkles aria-hidden="true" className="size-3.5" />
             Contas antigas e itens raros
@@ -311,14 +297,14 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
             <span aria-hidden="true" className="block">está aqui</span>
           </h1>
           <p ref={subtitleRef} className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-            Encontre contas com itens raros, bandeirão, armas evolutivas e muito mais.
+            Encontre contas com <span className="font-black text-yellow-300">itens raros</span>, <span className="font-black text-yellow-300">bandeirão</span>, <span className="font-black text-yellow-300">armas evolutivas</span> e muito mais.
           </p>
 
           <div ref={buttonsRef} className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
               onClick={() => onNavigate('explore')}
-              className="acc-button-primary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition duration-300 hover:-translate-y-0.5 active:scale-[0.98] sm:whitespace-nowrap"
+              className="acc-button-hero-gold inline-flex min-h-12 items-center justify-center gap-2 px-7 text-sm font-black transition duration-300 hover:-translate-y-0.5 active:scale-[0.98] sm:whitespace-nowrap"
             >
               Explorar contas
               <ChevronRight aria-hidden="true" className="size-4" />
@@ -333,10 +319,10 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
             </button>
           </div>
 
-          <div ref={metricsRef} className="mt-8 grid max-w-xl grid-cols-3 gap-3">
-            <MiniMetric value="Contas antigas" />
-            <MiniMetric value="Pix facilitado" />
-            <MiniMetric value="Suporte rápido" />
+          <div ref={metricsRef} className="mt-8 grid max-w-xl grid-cols-1 gap-3 min-[440px]:grid-cols-3">
+            <MiniMetric icon={Trophy} value="Contas antigas" />
+            <MiniMetric icon={Sparkles} value="Pix facilitado" />
+            <MiniMetric icon={MessageCircle} value="Suporte rápido" />
           </div>
         </div>
 
@@ -344,7 +330,6 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
           cardRef={accountCardRef}
           scannerRef={scannerRef}
           shineRef={shineRef}
-          tagRefs={tagRefs}
           verifiedRef={verifiedRef}
         />
       </div>
@@ -357,99 +342,66 @@ function HeroAccountShowcase({
   verifiedRef,
   scannerRef,
   shineRef,
-  tagRefs,
 }: {
   cardRef: RefObject<HTMLDivElement | null>
   verifiedRef: RefObject<HTMLDivElement | null>
   scannerRef: RefObject<HTMLSpanElement | null>
   shineRef: RefObject<HTMLSpanElement | null>
-  tagRefs: MutableRefObject<HTMLSpanElement[]>
 }) {
   return (
-    <div className="relative min-h-[520px] lg:min-h-[640px]">
+    <div className="relative min-h-[560px] lg:min-h-[720px]">
       <div
         ref={cardRef}
-        className="group/home-card relative mx-auto max-w-[520px] overflow-hidden rounded-[28px] border border-blue-300/18 bg-[linear-gradient(145deg,rgba(16,24,39,0.82),rgba(7,11,22,0.96))] p-4 shadow-[0_28px_90px_rgba(20,99,255,0.16)] backdrop-blur-xl transition duration-500 hover:border-blue-300/34 hover:shadow-[0_34px_110px_rgba(20,99,255,0.22)]"
+        className="group/home-card relative mx-auto w-full max-w-[680px] overflow-hidden rounded-[30px] border border-violet-400/60 bg-[linear-gradient(145deg,rgba(8,12,23,0.88),rgba(3,7,14,0.98))] shadow-[0_0_0_1px_rgba(250,204,21,0.32),0_0_46px_rgba(168,85,247,0.42),0_30px_110px_rgba(0,0,0,0.58)] backdrop-blur-xl transition duration-500 hover:border-yellow-300/70 hover:shadow-[0_0_0_1px_rgba(250,204,21,0.52),0_0_62px_rgba(168,85,247,0.5),0_34px_120px_rgba(0,0,0,0.64)]"
       >
         <span ref={scannerRef} className="acc-home-scanner scanner-line" aria-hidden="true" />
         <span ref={shineRef} className="acc-home-card-shine" aria-hidden="true" />
-        <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-[#070B16]">
-          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(56,189,248,0.1),transparent_34%,rgba(34,197,94,0.08)),linear-gradient(180deg,rgba(255,255,255,0.045),transparent)]" />
-          <div className="relative space-y-5 p-5">
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-blue-300">CONTA FF VERIFICADA</p>
-              <div
-                ref={verifiedRef}
-                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-emerald-300/24 bg-emerald-400/14 px-3 text-xs font-black text-emerald-100 backdrop-blur"
-              >
-                <BadgeCheck aria-hidden="true" className="size-4" />
-                Verificado
-              </div>
+        <div className="relative overflow-hidden rounded-[29px] bg-[#050912]">
+          <div className="relative h-[190px] overflow-hidden border-b border-violet-300/24 sm:h-[250px] xl:h-[280px]">
+            <img src={homeAssets.cardBanner} alt="" aria-hidden="true" className="h-full w-full object-cover object-center" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,11,0.08),rgba(3,5,11,0.52)),linear-gradient(90deg,rgba(124,58,237,0.2),transparent_42%,rgba(250,204,21,0.16))]" />
+            <p className="absolute left-5 top-4 rounded-br-2xl border-b border-r border-violet-300/28 bg-black/48 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-fuchsia-200 backdrop-blur sm:left-6 sm:text-sm">
+              CONTA FF VERIFICADA
+            </p>
+            <div
+              ref={verifiedRef}
+              className="absolute right-4 top-4 inline-flex min-h-9 items-center gap-2 rounded-full border border-emerald-300/28 bg-black/58 px-3 text-xs font-black text-emerald-100 shadow-[0_0_24px_rgba(34,197,94,0.24)] backdrop-blur sm:right-5"
+            >
+              <BadgeCheck aria-hidden="true" className="size-4" />
+              Verificado
             </div>
+          </div>
 
+          <div className="relative space-y-5 p-4 sm:p-5">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_0%,rgba(168,85,247,0.2),transparent_34%),radial-gradient(circle_at_88%_20%,rgba(250,204,21,0.13),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.035),transparent)]" />
             <div>
-              <h2 className="text-2xl font-black leading-tight text-white">Conta antiga com itens raros</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-400">Itens raros, bandeirão e armas evolutivas em um perfil organizado.</p>
+              <h2 className="relative text-2xl font-black leading-tight text-white sm:text-3xl">Conta antiga com itens raros</h2>
+              <p className="relative mt-2 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">
+                Contas antigas com itens históricos, bandeirão e armas evolutivas exclusivas.
+              </p>
             </div>
 
-            <div className="relative overflow-hidden rounded-2xl border border-blue-300/14 bg-[#09111f] p-4">
-              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(56,189,248,0.08),transparent_42%,rgba(250,204,21,0.08)),radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.16),transparent_44%)]" />
-              <div className="relative grid grid-cols-3 gap-2">
+            <div className="relative grid grid-cols-1 gap-2 min-[520px]:grid-cols-3">
                 {premiumAccountItems.map((item) => (
-                  <div key={item.label} className="rounded-xl border border-white/10 bg-white/[0.045] p-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                    <div className="flex h-20 items-center justify-center rounded-lg bg-black/18 p-1 sm:h-28">
-                      <img src={item.src} alt={item.label} className="max-h-full max-w-full object-contain drop-shadow-[0_16px_28px_rgba(0,0,0,0.42)]" />
+                  <div key={item.label} className="acc-home-item-card group/item rounded-xl border border-white/12 bg-black/28 p-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition duration-300 hover:-translate-y-1 hover:border-yellow-300/38 hover:bg-white/[0.055]">
+                    <div className="flex h-36 items-center justify-center rounded-lg bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,0.08),transparent_62%)] p-1 sm:h-44">
+                      <img src={item.src} alt={item.label} className={cn('max-w-full object-contain drop-shadow-[0_18px_34px_rgba(0,0,0,0.48)] transition duration-300 group-hover/item:scale-[1.04]', item.imageClassName)} />
                     </div>
-                    <p className="mt-2 min-h-10 text-[10px] font-black leading-4 text-slate-200 sm:text-[11px]">{item.label}</p>
+                    <p className="mt-3 text-sm font-black leading-5 text-white">{item.label}</p>
+                    {item.subtitle ? <p className="mt-0.5 text-xs font-semibold text-slate-400">{item.subtitle}</p> : null}
                   </div>
                 ))}
-              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              {heroTags.map((tag) => (
-                <span key={tag} className="rounded-xl border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200 transition duration-300 hover:scale-[1.02] hover:border-blue-300/25 last:col-span-2">
+            <div className="relative grid grid-cols-1 gap-2 min-[520px]:grid-cols-2">
+              {heroTags.map((tag, index) => (
+                <span key={tag} className={cn('rounded-xl border border-white/10 bg-[#081525]/78 px-3 py-2 text-xs font-black text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition duration-300 hover:scale-[1.02] hover:border-yellow-300/32', index === heroTags.length - 1 && 'min-[520px]:col-span-2')}>
                   {tag}
                 </span>
               ))}
             </div>
           </div>
         </div>
-      </div>
-
-      {heroTags.map((tag, index) => (
-        <span
-          key={tag}
-          ref={(node) => {
-            if (node) {
-              tagRefs.current[index] = node
-            }
-          }}
-          className={cn(
-            'acc-home-float absolute hidden rounded-full border px-3 py-2 text-xs font-black shadow-[0_14px_34px_rgba(0,0,0,0.22)] backdrop-blur md:inline-flex',
-            index % 3 === 0 && 'border-blue-300/24 bg-blue-500/14 text-blue-100',
-            index % 3 === 1 && 'border-violet-300/22 bg-violet-500/12 text-violet-100',
-            index % 3 === 2 && 'border-emerald-300/22 bg-emerald-500/12 text-emerald-100',
-            [
-              '-left-8 top-16',
-              '-right-3 top-28',
-              '-left-5 bottom-5',
-              'right-7 bottom-7',
-              'left-[35%] bottom-[-22px]',
-            ][index],
-          )}
-          style={{ animationDelay: `${index * 0.45}s` }}
-        >
-          {tag}
-        </span>
-      ))}
-
-      <div className="mt-4 flex flex-wrap justify-center gap-2 md:hidden">
-        {heroTags.map((tag) => (
-          <span key={tag} className="rounded-full border border-blue-300/16 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200 transition duration-300 hover:scale-[1.02]">
-            {tag}
-          </span>
-        ))}
       </div>
     </div>
   )
@@ -726,9 +678,14 @@ function SectionHeader({ eyebrow, title, description, action }: { eyebrow: strin
   )
 }
 
-function MiniMetric({ value, label }: { value: string; label?: string }) {
+function MiniMetric({ value, label, icon: Icon }: { value: string; label?: string; icon?: LucideIcon }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+    <div className="flex min-h-20 items-center gap-3 rounded-2xl border border-white/10 bg-black/28 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur">
+      {Icon ? (
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-yellow-300/20 bg-yellow-400/10 text-yellow-300">
+          <Icon aria-hidden="true" className="size-5" />
+        </span>
+      ) : null}
       <p className={cn('font-black leading-tight text-white', label ? 'text-xl' : 'text-sm sm:text-base')}>{value}</p>
       {label ? <p className="mt-1 text-xs font-semibold text-slate-500">{label}</p> : null}
     </div>
