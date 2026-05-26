@@ -215,8 +215,24 @@ video {
   will-change: transform, opacity;
 }
 
-.acc-home-scroll-pin {
-  will-change: transform;
+.acc-home-card-shine {
+  position: absolute;
+  inset-block: -18%;
+  left: -42%;
+  z-index: 5;
+  width: 28%;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.14),
+    rgba(159, 246, 198, 0.12),
+    transparent
+  );
+  filter: blur(10px);
+  transform: skewX(-18deg) translate3d(-130%, 0, 0);
+  will-change: transform, opacity;
 }
 
 .acc-home-float {

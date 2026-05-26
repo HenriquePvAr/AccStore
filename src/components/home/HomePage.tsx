@@ -17,7 +17,7 @@ import type { LucideIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { useEffect, useMemo, useRef, type MutableRefObject, type ReactNode, type RefObject } from 'react'
+import { useEffect, useRef, type MutableRefObject, type ReactNode, type RefObject } from 'react'
 import type { AppView } from '../../lib/navigation'
 import { formatBRL } from '../../lib/format'
 import { cn } from '../../lib/utils'
@@ -31,52 +31,52 @@ interface HomePageProps {
   onNavigate: (view: AppView) => void
 }
 
+type ShowcaseAccount = {
+  title: string
+  price: number
+  tags: string[]
+  accent: 'blue' | 'emerald' | 'violet' | 'cyan'
+}
+
 const heroTags = ['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Conta veterana', 'Vendedor verificado']
 
-const featuredFallbackImages = [
-  '/assets/accstore/card-rare.png',
-  '/assets/accstore/card-complete.png',
-  '/assets/accstore/card-advanced.png',
-  '/assets/accstore/card-balanced.png',
+const showcaseAccounts: ShowcaseAccount[] = [
+  { title: 'Conta FF com itens raros', price: 379.9, tags: ['Itens raros', 'Patente alta', 'Verificado'], accent: 'blue' },
+  { title: 'Conta FF com passes antigos', price: 289.9, tags: ['Passe antigo', 'Conta veterana', 'Seguro'], accent: 'emerald' },
+  { title: 'Conta FF com arma evolutiva', price: 449.9, tags: ['Arma evolutiva', 'Itens raros', 'Verificado'], accent: 'violet' },
+  { title: 'Conta FF veterana', price: 229.9, tags: ['Conta veterana', 'Boa região', 'Oferta recente'], accent: 'cyan' },
 ]
 
 const trustCards: Array<{ icon: LucideIcon; title: string; description: string }> = [
-  { icon: ShieldCheck, title: 'Vendedores verificados', description: 'Mais confiança para negociar contas e tirar dúvidas antes da compra.' },
-  { icon: Tags, title: 'Categorias claras', description: 'Encontre contas por perfil, preço, itens, passe e tipo de evolução.' },
-  { icon: Filter, title: 'Filtros úteis', description: 'Explore por preço, itens raros, patente, região e contas mais recentes.' },
-  { icon: Zap, title: 'Atendimento rápido', description: 'Fluxos simples para comprar, vender e falar com a equipe quando precisar.' },
-  { icon: Smartphone, title: 'Perfeito no celular', description: 'Interface direta para navegar, comparar e pedir suporte pelo WhatsApp.' },
-  { icon: Gamepad2, title: 'Foco gamer', description: 'Uma experiência pensada para contas de Free Fire e outros jogos.' },
+  { icon: ShieldCheck, title: 'Vendedores verificados', description: 'Perfis com sinais claros de confiança para negociar com mais tranquilidade.' },
+  { icon: Filter, title: 'Filtros por preço, itens e patente', description: 'Encontre contas por faixa de valor, raridade, estilo de jogo e evolução.' },
+  { icon: Tags, title: 'Contas organizadas', description: 'Cards objetivos, status legíveis e informações principais sem excesso de texto.' },
+  { icon: Zap, title: 'Atendimento rápido', description: 'Fluxos diretos para comprar, vender e tirar dúvidas quando precisar.' },
+  { icon: Smartphone, title: 'Experiência mobile', description: 'Interface pensada para navegar, comparar e chamar no WhatsApp pelo celular.' },
+  { icon: Gamepad2, title: 'Foco em contas gamer', description: 'Uma vitrine feita para contas de Free Fire e outros jogos, com linguagem do mercado.' },
 ]
 
 const categories = ['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Contas veteranas', 'Patentes altas', 'Ofertas recentes']
 
 const steps: Array<{ icon: LucideIcon; title: string; text: string }> = [
-  { icon: ShoppingBag, title: 'Escolha sua conta', text: 'Veja detalhes como itens, passes, patente, preço e vendedor.' },
+  { icon: ShoppingBag, title: 'Escolha sua conta', text: 'Veja itens, passes, patente, preço e vendedor.' },
   { icon: MessageCircle, title: 'Fale com o vendedor', text: 'Tire dúvidas e combine a compra de forma simples.' },
   { icon: ShieldCheck, title: 'Receba com segurança', text: 'Finalize a negociação com mais confiança e praticidade.' },
 ]
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 26 },
+  hidden: { opacity: 0, y: 28 },
   visible: { opacity: 1, y: 0 },
 }
 
-export function HomePage({ featuredAccounts, loading = false, onOpenAccount, onNavigate }: HomePageProps) {
+export function HomePage({ onNavigate }: HomePageProps) {
   const supportWhatsapp = typeof import.meta.env.VITE_PUBLIC_WHATSAPP === 'string' ? import.meta.env.VITE_PUBLIC_WHATSAPP : ''
   const supportWhatsappUrl = supportWhatsapp ? getWhatsAppUrl(supportWhatsapp) : null
-  const featured = useMemo(() => featuredAccounts.slice(0, 4), [featuredAccounts])
 
   return (
-    <div className="overflow-hidden">
+    <div className="relative -mx-4 overflow-hidden sm:-mx-6 lg:-mx-7">
       <HeroSection onNavigate={onNavigate} />
-      <FeaturedAccountsSection
-        accounts={featured}
-        loading={loading}
-        supportWhatsappUrl={supportWhatsappUrl}
-        onOpenAccount={onOpenAccount}
-        onNavigate={onNavigate}
-      />
+      <FeaturedAccountsSection supportWhatsappUrl={supportWhatsappUrl} onNavigate={onNavigate} />
       <HowItWorksSection />
       <TrustSection />
       <CategoriesSection onNavigate={onNavigate} />
@@ -87,7 +87,6 @@ export function HomePage({ featuredAccounts, loading = false, onOpenAccount, onN
 
 function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
   const heroRef = useRef<HTMLElement | null>(null)
-  const pinRef = useRef<HTMLDivElement | null>(null)
   const eyebrowRef = useRef<HTMLSpanElement | null>(null)
   const titleRef = useRef<HTMLHeadingElement | null>(null)
   const subtitleRef = useRef<HTMLParagraphElement | null>(null)
@@ -96,6 +95,7 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
   const accountCardRef = useRef<HTMLDivElement | null>(null)
   const verifiedRef = useRef<HTMLDivElement | null>(null)
   const scannerRef = useRef<HTMLSpanElement | null>(null)
+  const shineRef = useRef<HTMLSpanElement | null>(null)
   const tagRefs = useRef<HTMLSpanElement[]>([])
 
   useEffect(() => {
@@ -113,17 +113,24 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
         ].filter(Boolean) as HTMLElement[]
       const tagItems = () => tagRefs.current.filter(Boolean)
       const visibleItems = () =>
-        [...copyItems(), accountCardRef.current, verifiedRef.current, ...tagItems()].filter(Boolean) as HTMLElement[]
+        [
+          ...copyItems(),
+          accountCardRef.current,
+          verifiedRef.current,
+          ...tagItems(),
+        ].filter(Boolean) as HTMLElement[]
 
       media.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
         const tags = tagItems()
 
-        gsap.set([eyebrowRef.current, titleRef.current], { opacity: 0.28, y: 34 })
+        gsap.set(eyebrowRef.current, { opacity: 0.74, y: 14 })
+        gsap.set(titleRef.current, { opacity: 0.48, y: 28 })
         gsap.set([subtitleRef.current, buttonsRef.current, metricsRef.current], { opacity: 0, y: 40 })
-        gsap.set(accountCardRef.current, { opacity: 0, y: 56, scale: 0.85, transformOrigin: 'center center' })
+        gsap.set(accountCardRef.current, { opacity: 0, x: 80, y: 80, scale: 0.9, transformOrigin: 'center center' })
         gsap.set(tags, { opacity: 0, y: 22, scale: 0.9, transformOrigin: 'center center' })
-        gsap.set(scannerRef.current, { opacity: 0, yPercent: -120 })
-        gsap.set(verifiedRef.current, { opacity: 0, y: -8, scale: 0.86, transformOrigin: 'center center' })
+        gsap.set(scannerRef.current, { opacity: 0, yPercent: -130 })
+        gsap.set(verifiedRef.current, { opacity: 0, scale: 0.8, transformOrigin: 'center center' })
+        gsap.set(shineRef.current, { opacity: 0, xPercent: -130 })
 
         const timeline = gsap.timeline({
           defaults: { ease: 'power2.out' },
@@ -132,24 +139,26 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
             start: 'top top',
             end: '+=1800',
             scrub: true,
-            pin: pinRef.current,
+            pin: true,
             anticipatePin: 1,
             invalidateOnRefresh: true,
           },
         })
 
         timeline
-          .to(eyebrowRef.current, { opacity: 1, y: 0, duration: 0.45 })
-          .to(titleRef.current, { opacity: 1, y: 0, duration: 0.7 }, '>-0.05')
-          .to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.55 }, '>-0.08')
-          .to(buttonsRef.current, { opacity: 1, y: 0, duration: 0.45 }, '>-0.08')
-          .to(metricsRef.current, { opacity: 1, y: 0, duration: 0.35 }, '>-0.05')
-          .to(accountCardRef.current, { opacity: 1, y: 0, scale: 1, duration: 0.8 }, '>-0.12')
-          .to(tags, { opacity: 1, y: 0, scale: 1, stagger: 0.12, duration: 0.65 }, '>-0.04')
-          .to(scannerRef.current, { opacity: 0.72, yPercent: 330, duration: 0.85, ease: 'none' }, '>-0.05')
-          .to(scannerRef.current, { opacity: 0, duration: 0.2 }, '>-0.08')
-          .to(verifiedRef.current, { opacity: 1, y: 0, scale: 1, duration: 0.45 }, '>-0.18')
-          .to(accountCardRef.current, { scale: 1.025, duration: 0.65, ease: 'power1.inOut' }, '>-0.08')
+          .to(eyebrowRef.current, { opacity: 1, y: 0, duration: 0.35 })
+          .to(titleRef.current, { opacity: 1, y: 0, duration: 0.72 }, '>-0.04')
+          .to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.48 }, '>-0.05')
+          .to(buttonsRef.current, { opacity: 1, y: 0, duration: 0.42 }, '>-0.04')
+          .to(metricsRef.current, { opacity: 1, y: 0, duration: 0.32 }, '>-0.02')
+          .to(accountCardRef.current, { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.8 }, '>-0.08')
+          .to(tags, { opacity: 1, y: 0, scale: 1, stagger: 0.1, duration: 0.62 }, '>-0.04')
+          .to(scannerRef.current, { opacity: 0.7, yPercent: 360, duration: 0.75, ease: 'none' }, '>-0.02')
+          .to(scannerRef.current, { opacity: 0, duration: 0.18 }, '>-0.06')
+          .to(verifiedRef.current, { opacity: 1, scale: 1, duration: 0.38 }, '>-0.08')
+          .to(shineRef.current, { opacity: 0.55, xPercent: 135, duration: 0.68, ease: 'none' }, '>-0.06')
+          .to(shineRef.current, { opacity: 0, duration: 0.22 }, '>-0.04')
+          .to(accountCardRef.current, { scale: 1.025, duration: 0.5, ease: 'power1.inOut' }, '<')
 
         ScrollTrigger.refresh()
 
@@ -158,7 +167,7 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
 
       media.add('(max-width: 767px), (prefers-reduced-motion: reduce)', () => {
         gsap.set(visibleItems(), { opacity: 1, clearProps: 'transform' })
-        gsap.set(scannerRef.current, { opacity: 0, clearProps: 'transform' })
+        gsap.set([scannerRef.current, shineRef.current], { opacity: 0, clearProps: 'transform' })
       })
 
       return () => media.revert()
@@ -168,58 +177,58 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
   }, [])
 
   return (
-    <section ref={heroRef} className="relative min-h-[calc(100svh-4rem)] overflow-hidden">
-      <div ref={pinRef} className="acc-home-scroll-pin relative flex min-h-[calc(100svh-4rem)] items-center py-10 sm:py-14 lg:py-16">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(20,149,255,0.14),transparent_30%),radial-gradient(circle_at_82%_20%,rgba(139,92,246,0.1),transparent_34%),radial-gradient(circle_at_62%_82%,rgba(34,197,94,0.08),transparent_30%)]" />
-        <div className="absolute inset-0 bg-grid-fade bg-[length:48px_48px] opacity-[0.055]" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#05070F] to-transparent" />
+    <section ref={heroRef} className="relative min-h-[calc(100svh-3.5rem)] overflow-hidden bg-[#05070F]">
+      <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(20,99,255,0.14),transparent_34%),linear-gradient(235deg,rgba(34,197,94,0.1),transparent_35%),linear-gradient(180deg,#071121,#05070F_60%,#05070F)]" />
+      <div className="absolute inset-0 bg-grid-fade bg-[length:56px_56px] opacity-[0.055]" />
+      <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/30 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#05070F] to-transparent" />
 
-        <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1fr)]">
-          <div className="max-w-3xl">
-            <span ref={eyebrowRef} className="inline-flex min-h-8 items-center gap-2 rounded-full border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-[0.12em] text-blue-200">
-              <Sparkles aria-hidden="true" className="size-3.5" />
-              Marketplace gamer premium
-            </span>
-            <h1 ref={titleRef} className="mt-5 max-w-4xl text-[42px] font-black leading-[0.98] tracking-normal text-white sm:text-[64px] lg:text-[78px]">
-              Sua próxima conta está aqui
-            </h1>
-            <p ref={subtitleRef} className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-              Encontre contas com itens raros, passes antigos, armas evolutivas e muito mais.
-            </p>
+      <div className="relative mx-auto grid min-h-[calc(100svh-3.5rem)] w-full max-w-7xl items-center gap-10 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,0.92fr)_minmax(420px,1fr)] lg:px-7">
+        <div className="max-w-3xl">
+          <span ref={eyebrowRef} className="inline-flex min-h-8 items-center gap-2 rounded-full border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-[0.12em] text-blue-200">
+            <Sparkles aria-hidden="true" className="size-3.5" />
+            Marketplace gamer premium
+          </span>
+          <h1 ref={titleRef} className="mt-5 max-w-4xl text-[42px] font-black leading-[0.98] tracking-normal text-white sm:text-[66px] lg:text-[82px]">
+            Sua próxima conta está aqui
+          </h1>
+          <p ref={subtitleRef} className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+            Encontre contas com itens raros, passes antigos, armas evolutivas e muito mais.
+          </p>
 
-            <div ref={buttonsRef} className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => onNavigate('explore')}
-                className="acc-button-primary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5"
-              >
-                Explorar contas
-                <ChevronRight aria-hidden="true" className="size-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onNavigate('sell')}
-                className="acc-button-secondary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5"
-              >
-                <Store aria-hidden="true" className="size-4" />
-                Quero vender minha conta
-              </button>
-            </div>
-
-            <div ref={metricsRef} className="mt-8 grid max-w-xl grid-cols-3 gap-3">
-              <MiniMetric value="4+" label="perfis de conta" />
-              <MiniMetric value="Pix" label="pagamento claro" />
-              <MiniMetric value="24h" label="suporte ágil" />
-            </div>
+          <div ref={buttonsRef} className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => onNavigate('explore')}
+              className="acc-button-primary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5 sm:whitespace-nowrap"
+            >
+              Explorar contas
+              <ChevronRight aria-hidden="true" className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate('sell')}
+              className="acc-button-secondary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5 sm:whitespace-nowrap"
+            >
+              <Store aria-hidden="true" className="size-4" />
+              Quero vender minha conta
+            </button>
           </div>
 
-          <HeroAccountShowcase
-            cardRef={accountCardRef}
-            scannerRef={scannerRef}
-            tagRefs={tagRefs}
-            verifiedRef={verifiedRef}
-          />
+          <div ref={metricsRef} className="mt-8 grid max-w-xl grid-cols-3 gap-3">
+            <MiniMetric value="4" label="perfis em destaque" />
+            <MiniMetric value="Pix" label="pagamento claro" />
+            <MiniMetric value="24h" label="atendimento ágil" />
+          </div>
         </div>
+
+        <HeroAccountShowcase
+          cardRef={accountCardRef}
+          scannerRef={scannerRef}
+          shineRef={shineRef}
+          tagRefs={tagRefs}
+          verifiedRef={verifiedRef}
+        />
       </div>
     </section>
   )
@@ -229,49 +238,69 @@ function HeroAccountShowcase({
   cardRef,
   verifiedRef,
   scannerRef,
+  shineRef,
   tagRefs,
 }: {
   cardRef: RefObject<HTMLDivElement | null>
   verifiedRef: RefObject<HTMLDivElement | null>
   scannerRef: RefObject<HTMLSpanElement | null>
+  shineRef: RefObject<HTMLSpanElement | null>
   tagRefs: MutableRefObject<HTMLSpanElement[]>
 }) {
   return (
-    <div className="relative min-h-[520px] lg:min-h-[620px]">
+    <div className="relative min-h-[520px] lg:min-h-[640px]">
       <div
         ref={cardRef}
-        className="group/home-card relative mx-auto max-w-[430px] rounded-[28px] border border-blue-300/18 bg-[linear-gradient(145deg,rgba(16,24,39,0.78),rgba(7,11,22,0.94))] p-4 shadow-[0_28px_90px_rgba(20,99,255,0.14)] backdrop-blur-xl transition duration-500 hover:border-blue-300/34 hover:shadow-[0_34px_110px_rgba(20,99,255,0.2)]"
+        className="group/home-card relative mx-auto max-w-[440px] overflow-hidden rounded-[28px] border border-blue-300/18 bg-[linear-gradient(145deg,rgba(16,24,39,0.82),rgba(7,11,22,0.96))] p-4 shadow-[0_28px_90px_rgba(20,99,255,0.16)] backdrop-blur-xl transition duration-500 hover:border-blue-300/34 hover:shadow-[0_34px_110px_rgba(20,99,255,0.22)]"
       >
-        <div className="absolute -inset-px rounded-[28px] bg-[linear-gradient(120deg,rgba(56,189,248,0.16),transparent_34%,rgba(34,197,94,0.12)_76%,rgba(139,92,246,0.1))] opacity-70 blur-[1px]" />
+        <span ref={scannerRef} className="acc-home-scanner scanner-line" aria-hidden="true" />
+        <span ref={shineRef} className="acc-home-card-shine" aria-hidden="true" />
         <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-[#070B16]">
-          <div className="relative aspect-[4/5] overflow-hidden">
-            <img src="/assets/accstore/card-rare.png" alt="Card visual de conta Free Fire verificada" className="size-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#070B16] via-[#070B16]/22 to-transparent" />
-            <span ref={scannerRef} className="acc-home-scanner scanner-line" aria-hidden="true" />
-            <div
-              ref={verifiedRef}
-              className="absolute right-4 top-4 inline-flex min-h-10 items-center gap-2 rounded-full border border-emerald-300/24 bg-emerald-400/14 px-3 text-xs font-black text-emerald-100 backdrop-blur"
-            >
-              <BadgeCheck aria-hidden="true" className="size-4" />
-              Verificado
-            </div>
-          </div>
-
-          <div className="space-y-4 p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.12em] text-blue-300">Conta FF Verificada</p>
-                <h2 className="mt-1 text-2xl font-black text-white">Conta com perfil premium</h2>
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(56,189,248,0.1),transparent_34%,rgba(34,197,94,0.08)),linear-gradient(180deg,rgba(255,255,255,0.045),transparent)]" />
+          <div className="relative space-y-5 p-5">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-blue-300">Conta FF Verificada</p>
+              <div
+                ref={verifiedRef}
+                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-emerald-300/24 bg-emerald-400/14 px-3 text-xs font-black text-emerald-100 backdrop-blur"
+              >
+                <BadgeCheck aria-hidden="true" className="size-4" />
+                Verificado
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-right">
-                <p className="text-[11px] font-bold text-slate-500">Patente</p>
-                <p className="text-sm font-black text-white">Alta</p>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-black leading-tight text-white">Conta com perfil premium</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-400">Vitrine visual para contas com bom histórico, itens raros e negociação organizada.</p>
+            </div>
+
+            <div className="relative overflow-hidden rounded-2xl border border-blue-300/14 bg-[#09111f] p-4">
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(56,189,248,0.08),transparent_42%,rgba(34,197,94,0.08))]" />
+              <div className="relative grid gap-3">
+                <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Patente</p>
+                    <p className="mt-1 text-lg font-black text-white">Alta</p>
+                  </div>
+                  <div className="h-10 w-28 overflow-hidden rounded-full border border-emerald-300/18 bg-emerald-400/10">
+                    <div className="h-full w-[78%] rounded-full bg-gradient-to-r from-blue-400 to-emerald-300 opacity-80" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {['Raros', 'Passes', 'Evolutivas'].map((label) => (
+                    <div key={label} className="rounded-xl border border-white/10 bg-white/[0.04] p-3 text-center">
+                      <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-400">{label}</p>
+                      <p className="mt-2 text-xl font-black text-white">✓</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              {['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Conta veterana', 'Vendedor verificado'].map((tag) => (
-                <span key={tag} className="rounded-lg border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200 last:col-span-2">
+              {heroTags.map((tag) => (
+                <span key={tag} className="rounded-xl border border-white/10 bg-white/[0.045] px-3 py-2 text-xs font-black text-slate-200 last:col-span-2">
                   {tag}
                 </span>
               ))}
@@ -289,16 +318,16 @@ function HeroAccountShowcase({
             }
           }}
           className={cn(
-            'acc-home-float absolute hidden rounded-full border px-3 py-2 text-xs font-black shadow-[0_14px_34px_rgba(0,0,0,0.2)] backdrop-blur md:inline-flex',
+            'acc-home-float absolute hidden rounded-full border px-3 py-2 text-xs font-black shadow-[0_14px_34px_rgba(0,0,0,0.22)] backdrop-blur md:inline-flex',
             index % 3 === 0 && 'border-blue-300/24 bg-blue-500/14 text-blue-100',
             index % 3 === 1 && 'border-violet-300/22 bg-violet-500/12 text-violet-100',
             index % 3 === 2 && 'border-emerald-300/22 bg-emerald-500/12 text-emerald-100',
             [
-              'left-0 top-16',
-              'right-2 top-28',
-              'left-8 bottom-44',
-              'right-8 bottom-28',
-              'left-1/2 top-[52%] -translate-x-1/2',
+              '-left-8 top-16',
+              '-right-3 top-28',
+              'left-0 top-[62%]',
+              'right-0 top-[66%]',
+              'left-1/2 bottom-0 -translate-x-1/2',
             ][index],
           )}
           style={{ animationDelay: `${index * 0.45}s` }}
@@ -319,24 +348,18 @@ function HeroAccountShowcase({
 }
 
 function FeaturedAccountsSection({
-  accounts,
-  loading,
   supportWhatsappUrl,
-  onOpenAccount,
   onNavigate,
 }: {
-  accounts: Account[]
-  loading: boolean
   supportWhatsappUrl: string | null
-  onOpenAccount: (account: Account) => void
   onNavigate: (view: AppView) => void
 }) {
   return (
     <HomeBand id="destaques">
       <SectionHeader
         eyebrow="Contas em destaque"
-        title="Algumas contas para começar a explorar"
-        description="A Home mostra só uma prévia. O catálogo completo fica na página Explorar."
+        title="Uma prévia selecionada para começar"
+        description="A Home mostra quatro exemplos de perfis. O catálogo completo fica em Explorar."
         action={
           <button type="button" onClick={() => onNavigate('explore')} className="acc-button-secondary inline-flex min-h-10 items-center gap-2 px-4 text-sm font-black transition">
             Ver catálogo completo
@@ -345,85 +368,82 @@ function FeaturedAccountsSection({
         }
       />
 
-      {loading ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-[370px] animate-pulse rounded-2xl border border-white/10 bg-white/[0.04]" />
-          ))}
-        </div>
-      ) : accounts.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {accounts.map((account, index) => (
-            <FeaturedAccountCard
-              key={account.id}
-              account={account}
-              imageFallback={featuredFallbackImages[index % featuredFallbackImages.length]}
-              index={index}
-              supportWhatsappUrl={supportWhatsappUrl}
-              onOpen={() => onOpenAccount(account)}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-dashed border-blue-300/24 bg-blue-500/8 p-8 text-center">
-          <h3 className="text-xl font-black text-white">As contas em destaque aparecem aqui em breve</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-400">Quando houver anúncios publicados, a Home mostra uma prévia sem virar catálogo completo.</p>
-          <button type="button" onClick={() => onNavigate('explore')} className="acc-button-primary mt-5 inline-flex min-h-11 items-center gap-2 px-5 text-sm font-black">
-            Explorar contas
-            <ChevronRight aria-hidden="true" className="size-4" />
-          </button>
-        </div>
-      )}
+      <motion.div
+        variants={{
+          hidden: {},
+          visible: { transition: { staggerChildren: 0.08 } },
+        }}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+      >
+        {showcaseAccounts.map((account) => (
+          <ShowcaseAccountCard
+            key={account.title}
+            account={account}
+            supportWhatsappUrl={supportWhatsappUrl}
+            onExplore={() => onNavigate('explore')}
+          />
+        ))}
+      </motion.div>
     </HomeBand>
   )
 }
 
-function FeaturedAccountCard({
+function ShowcaseAccountCard({
   account,
-  imageFallback,
-  index,
   supportWhatsappUrl,
-  onOpen,
+  onExplore,
 }: {
-  account: Account
-  imageFallback: string
-  index: number
+  account: ShowcaseAccount
   supportWhatsappUrl: string | null
-  onOpen: () => void
+  onExplore: () => void
 }) {
-  const image = account.coverMediaUrl || account.media.find((item) => item.isCover)?.url || account.media[0]?.url || imageFallback
-  const tags = [
-    account.category,
-    account.region,
-    account.seller?.verified ? 'Vendedor verificado' : 'Verificado',
-  ].filter(Boolean).slice(0, 4) as string[]
-
   return (
     <motion.article
       variants={fadeUp}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 0.5, ease: 'easeOut', delay: index * 0.06 }}
-      whileHover={{ y: -4, scale: 1.01 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      whileHover={{ y: -5, scale: 1.01 }}
       className="group overflow-hidden rounded-2xl border border-blue-300/14 bg-[linear-gradient(145deg,rgba(16,24,39,0.86),rgba(7,11,22,0.94))] shadow-[0_18px_58px_rgba(0,0,0,0.22)] transition duration-300 hover:border-blue-300/34 hover:shadow-[0_22px_70px_rgba(20,99,255,0.13)]"
     >
-      <div className="relative aspect-[4/3] overflow-hidden">
-        <img src={image} alt={`Destaque ${account.title}`} className="size-full object-cover transition duration-500 group-hover:scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#070B16] via-transparent to-black/20" />
-        <span className="absolute left-3 top-3 rounded-full border border-emerald-300/22 bg-emerald-500/14 px-3 py-1.5 text-xs font-black text-emerald-100 backdrop-blur">
-          Disponível
-        </span>
+      <div className="relative aspect-[4/3] overflow-hidden border-b border-white/10 bg-[#08111f]">
+        <div
+          className={cn(
+            'absolute inset-0 opacity-80',
+            account.accent === 'blue' && 'bg-[linear-gradient(135deg,rgba(56,189,248,0.26),transparent_42%,rgba(20,99,255,0.18))]',
+            account.accent === 'emerald' && 'bg-[linear-gradient(135deg,rgba(34,197,94,0.22),transparent_42%,rgba(56,189,248,0.14))]',
+            account.accent === 'violet' && 'bg-[linear-gradient(135deg,rgba(139,92,246,0.22),transparent_42%,rgba(56,189,248,0.14))]',
+            account.accent === 'cyan' && 'bg-[linear-gradient(135deg,rgba(20,184,166,0.24),transparent_42%,rgba(20,99,255,0.14))]',
+          )}
+        />
+        <div className="absolute inset-4 rounded-2xl border border-white/10 bg-black/18 p-4 backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            <span className="rounded-full border border-emerald-300/24 bg-emerald-400/12 px-3 py-1 text-[11px] font-black text-emerald-100">
+              Verificado
+            </span>
+            <BadgeCheck aria-hidden="true" className="size-5 text-emerald-200" />
+          </div>
+          <div className="mt-10 h-2 w-3/4 rounded-full bg-white/18" />
+          <div className="mt-3 h-2 w-1/2 rounded-full bg-white/10" />
+          <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2">
+            {['Itens', 'Passe', 'Seguro'].map((tag) => (
+              <span key={tag} className="rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-center text-[10px] font-black text-slate-200">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4 p-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.1em] text-blue-300">{account.gameName || 'Free Fire'}</p>
-          <h3 className="mt-1 line-clamp-2 min-h-12 text-lg font-black leading-6 text-white">{account.title}</h3>
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-blue-300">Free Fire</p>
+          <h3 className="mt-1 min-h-12 text-lg font-black leading-6 text-white">{account.title}</h3>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
+          {account.tags.map((tag) => (
             <span key={tag} className="rounded-full border border-white/10 bg-white/[0.045] px-2.5 py-1 text-[11px] font-black text-slate-300">
               {tag}
             </span>
@@ -432,7 +452,7 @@ function FeaturedAccountCard({
 
         <div className="flex items-end justify-between gap-3 border-t border-white/10 pt-4">
           <div>
-            <p className="text-xs font-bold text-slate-500">Preço</p>
+            <p className="text-xs font-bold text-slate-500">A partir de</p>
             <p className="acc-money text-2xl font-black text-white">{formatBRL(account.price)}</p>
           </div>
           <div className="flex gap-2">
@@ -446,7 +466,7 @@ function FeaturedAccountCard({
                 WhatsApp
               </a>
             ) : null}
-            <button type="button" onClick={onOpen} className="acc-button-primary inline-flex min-h-10 items-center px-4 text-xs font-black transition">
+            <button type="button" onClick={onExplore} className="acc-button-primary inline-flex min-h-10 items-center px-4 text-xs font-black transition">
               Ver detalhes
             </button>
           </div>
@@ -459,7 +479,7 @@ function FeaturedAccountCard({
 function HowItWorksSection() {
   return (
     <HomeBand>
-      <SectionHeader eyebrow="Como funciona" title="Compra simples, com contexto claro" description="Três passos para sair da vitrine e seguir para a negociação com mais confiança." />
+      <SectionHeader eyebrow="Como funciona" title="Compra simples, com contexto claro" description="Da escolha da conta até a negociação, cada etapa tem uma ação principal." />
       <div className="relative grid gap-4 lg:grid-cols-3">
         <div className="absolute left-[16%] right-[16%] top-10 hidden h-px bg-gradient-to-r from-transparent via-blue-300/30 to-transparent lg:block" />
         {steps.map((step, index) => (
@@ -470,7 +490,7 @@ function HowItWorksSection() {
             whileInView="visible"
             viewport={{ once: true, amount: 0.35 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="relative rounded-2xl border border-blue-300/16 bg-white/[0.035] p-5 backdrop-blur"
+            className="relative rounded-2xl border border-blue-300/16 bg-white/[0.035] p-5 backdrop-blur transition hover:border-blue-300/30 hover:bg-blue-500/7"
           >
             <span className="flex size-14 items-center justify-center rounded-2xl border border-blue-300/25 bg-blue-500/12 text-blue-200 shadow-[0_0_30px_rgba(20,149,255,0.12)]">
               <step.icon aria-hidden="true" className="size-6" />
@@ -488,7 +508,7 @@ function HowItWorksSection() {
 function TrustSection() {
   return (
     <HomeBand>
-      <SectionHeader eyebrow="Por que usar a ACC Story?" title="Confiança sem perder o visual gamer" description="A experiência foi pensada para comprar, comparar e vender contas sem bagunça." />
+      <SectionHeader eyebrow="Por que usar a ACC Story?" title="Confiança com visual gamer limpo" description="A experiência foi pensada para comparar contas sem bagunça e seguir para a ação certa." />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {trustCards.map((card, index) => (
           <motion.article
@@ -498,7 +518,7 @@ function TrustSection() {
             whileInView="visible"
             viewport={{ once: true, amount: 0.25 }}
             transition={{ duration: 0.45, delay: index * 0.04 }}
-            className="group rounded-2xl border border-blue-300/14 bg-[linear-gradient(145deg,rgba(16,24,39,0.72),rgba(7,11,22,0.8))] p-5 transition hover:border-blue-300/34 hover:bg-blue-500/8"
+            className="group rounded-2xl border border-blue-300/14 bg-[linear-gradient(145deg,rgba(16,24,39,0.72),rgba(7,11,22,0.8))] p-5 transition hover:-translate-y-1 hover:border-blue-300/34 hover:bg-blue-500/8"
           >
             <span className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.045] text-blue-200 transition group-hover:text-emerald-200">
               <card.icon aria-hidden="true" className="size-5" />
@@ -541,8 +561,8 @@ function CategoriesSection({ onNavigate }: { onNavigate: (view: AppView) => void
 
 function FinalCta({ onNavigate }: { onNavigate: (view: AppView) => void }) {
   return (
-    <section className="relative py-10 sm:py-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(20,149,255,0.18),transparent_34%),radial-gradient(circle_at_70%_70%,rgba(34,197,94,0.11),transparent_28%)]" />
+    <section className="relative px-4 py-12 sm:px-6 sm:py-16 lg:px-7">
+      <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(20,149,255,0.14),transparent_42%),linear-gradient(245deg,rgba(34,197,94,0.1),transparent_38%)]" />
       <motion.div
         variants={fadeUp}
         initial="hidden"
@@ -569,9 +589,9 @@ function FinalCta({ onNavigate }: { onNavigate: (view: AppView) => void }) {
 
 function HomeBand({ children, id }: { children: ReactNode; id?: string }) {
   return (
-    <section id={id} className="relative py-10 sm:py-14">
+    <section id={id} className="relative px-4 py-12 sm:px-6 sm:py-16 lg:px-7">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/18 to-transparent" />
-      <div className="relative mx-auto max-w-7xl space-y-7 px-0">{children}</div>
+      <div className="relative mx-auto max-w-7xl space-y-8">{children}</div>
     </section>
   )
 }
