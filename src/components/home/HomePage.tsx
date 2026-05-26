@@ -14,8 +14,10 @@ import {
   Zap,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
-import { useMemo, useRef, type ReactNode } from 'react'
+import { motion } from 'framer-motion'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useEffect, useMemo, useRef, type MutableRefObject, type ReactNode, type RefObject } from 'react'
 import type { AppView } from '../../lib/navigation'
 import { formatBRL } from '../../lib/format'
 import { cn } from '../../lib/utils'
@@ -29,7 +31,7 @@ interface HomePageProps {
   onNavigate: (view: AppView) => void
 }
 
-const heroTags = ['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Conta veterana', 'Verificado']
+const heroTags = ['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Conta veterana', 'Vendedor verificado']
 
 const featuredFallbackImages = [
   '/assets/accstore/card-rare.png',
@@ -60,30 +62,6 @@ const fadeUp = {
   visible: { opacity: 1, y: 0 },
 }
 
-const fadeSoft = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
-}
-
-const heroGroup = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.08,
-    },
-  },
-}
-
-const heroItem = {
-  hidden: { opacity: 0, y: 22 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.65, ease: 'easeOut' as const },
-  },
-}
-
 export function HomePage({ featuredAccounts, loading = false, onOpenAccount, onNavigate }: HomePageProps) {
   const supportWhatsapp = typeof import.meta.env.VITE_PUBLIC_WHATSAPP === 'string' ? import.meta.env.VITE_PUBLIC_WHATSAPP : ''
   const supportWhatsappUrl = supportWhatsapp ? getWhatsAppUrl(supportWhatsapp) : null
@@ -108,79 +86,160 @@ export function HomePage({ featuredAccounts, loading = false, onOpenAccount, onN
 }
 
 function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
+  const heroRef = useRef<HTMLElement | null>(null)
+  const pinRef = useRef<HTMLDivElement | null>(null)
+  const eyebrowRef = useRef<HTMLSpanElement | null>(null)
+  const titleRef = useRef<HTMLHeadingElement | null>(null)
+  const subtitleRef = useRef<HTMLParagraphElement | null>(null)
+  const buttonsRef = useRef<HTMLDivElement | null>(null)
+  const metricsRef = useRef<HTMLDivElement | null>(null)
+  const accountCardRef = useRef<HTMLDivElement | null>(null)
+  const verifiedRef = useRef<HTMLDivElement | null>(null)
+  const scannerRef = useRef<HTMLSpanElement | null>(null)
+  const tagRefs = useRef<HTMLSpanElement[]>([])
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger)
+
+    const context = gsap.context(() => {
+      const media = gsap.matchMedia()
+      const copyItems = () =>
+        [
+          eyebrowRef.current,
+          titleRef.current,
+          subtitleRef.current,
+          buttonsRef.current,
+          metricsRef.current,
+        ].filter(Boolean) as HTMLElement[]
+      const tagItems = () => tagRefs.current.filter(Boolean)
+      const visibleItems = () =>
+        [...copyItems(), accountCardRef.current, verifiedRef.current, ...tagItems()].filter(Boolean) as HTMLElement[]
+
+      media.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
+        const tags = tagItems()
+
+        gsap.set([eyebrowRef.current, titleRef.current], { opacity: 0.28, y: 34 })
+        gsap.set([subtitleRef.current, buttonsRef.current, metricsRef.current], { opacity: 0, y: 40 })
+        gsap.set(accountCardRef.current, { opacity: 0, y: 56, scale: 0.85, transformOrigin: 'center center' })
+        gsap.set(tags, { opacity: 0, y: 22, scale: 0.9, transformOrigin: 'center center' })
+        gsap.set(scannerRef.current, { opacity: 0, yPercent: -120 })
+        gsap.set(verifiedRef.current, { opacity: 0, y: -8, scale: 0.86, transformOrigin: 'center center' })
+
+        const timeline = gsap.timeline({
+          defaults: { ease: 'power2.out' },
+          scrollTrigger: {
+            trigger: heroRef.current,
+            start: 'top top',
+            end: '+=1800',
+            scrub: true,
+            pin: pinRef.current,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        })
+
+        timeline
+          .to(eyebrowRef.current, { opacity: 1, y: 0, duration: 0.45 })
+          .to(titleRef.current, { opacity: 1, y: 0, duration: 0.7 }, '>-0.05')
+          .to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.55 }, '>-0.08')
+          .to(buttonsRef.current, { opacity: 1, y: 0, duration: 0.45 }, '>-0.08')
+          .to(metricsRef.current, { opacity: 1, y: 0, duration: 0.35 }, '>-0.05')
+          .to(accountCardRef.current, { opacity: 1, y: 0, scale: 1, duration: 0.8 }, '>-0.12')
+          .to(tags, { opacity: 1, y: 0, scale: 1, stagger: 0.12, duration: 0.65 }, '>-0.04')
+          .to(scannerRef.current, { opacity: 0.72, yPercent: 330, duration: 0.85, ease: 'none' }, '>-0.05')
+          .to(scannerRef.current, { opacity: 0, duration: 0.2 }, '>-0.08')
+          .to(verifiedRef.current, { opacity: 1, y: 0, scale: 1, duration: 0.45 }, '>-0.18')
+          .to(accountCardRef.current, { scale: 1.025, duration: 0.65, ease: 'power1.inOut' }, '>-0.08')
+
+        ScrollTrigger.refresh()
+
+        return () => timeline.kill()
+      })
+
+      media.add('(max-width: 767px), (prefers-reduced-motion: reduce)', () => {
+        gsap.set(visibleItems(), { opacity: 1, clearProps: 'transform' })
+        gsap.set(scannerRef.current, { opacity: 0, clearProps: 'transform' })
+      })
+
+      return () => media.revert()
+    }, heroRef)
+
+    return () => context.revert()
+  }, [])
+
   return (
-    <section className="relative min-h-[calc(100svh-4rem)] overflow-hidden py-10 sm:py-14 lg:py-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(20,149,255,0.14),transparent_30%),radial-gradient(circle_at_82%_20%,rgba(139,92,246,0.1),transparent_34%),radial-gradient(circle_at_62%_82%,rgba(34,197,94,0.08),transparent_30%)]" />
-      <div className="absolute inset-0 bg-grid-fade bg-[length:48px_48px] opacity-[0.055]" />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#05070F] to-transparent" />
+    <section ref={heroRef} className="relative min-h-[calc(100svh-4rem)] overflow-hidden">
+      <div ref={pinRef} className="acc-home-scroll-pin relative flex min-h-[calc(100svh-4rem)] items-center py-10 sm:py-14 lg:py-16">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(20,149,255,0.14),transparent_30%),radial-gradient(circle_at_82%_20%,rgba(139,92,246,0.1),transparent_34%),radial-gradient(circle_at_62%_82%,rgba(34,197,94,0.08),transparent_30%)]" />
+        <div className="absolute inset-0 bg-grid-fade bg-[length:48px_48px] opacity-[0.055]" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#05070F] to-transparent" />
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1fr)]">
-        <motion.div
-          variants={heroGroup}
-          initial="hidden"
-          animate="visible"
-          className="max-w-3xl"
-        >
-          <motion.span variants={heroItem} className="inline-flex min-h-8 items-center gap-2 rounded-full border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-[0.12em] text-blue-200">
-            <Sparkles aria-hidden="true" className="size-3.5" />
-            Marketplace gamer premium
-          </motion.span>
-          <motion.h1 variants={heroItem} className="mt-5 max-w-4xl text-[42px] font-black leading-[0.98] tracking-normal text-white sm:text-[64px] lg:text-[78px]">
-            Sua próxima conta está aqui
-          </motion.h1>
-          <motion.p variants={heroItem} className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-            Encontre contas com itens raros, passes antigos, armas evolutivas e muito mais.
-          </motion.p>
+        <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1fr)]">
+          <div className="max-w-3xl">
+            <span ref={eyebrowRef} className="inline-flex min-h-8 items-center gap-2 rounded-full border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-[0.12em] text-blue-200">
+              <Sparkles aria-hidden="true" className="size-3.5" />
+              Marketplace gamer premium
+            </span>
+            <h1 ref={titleRef} className="mt-5 max-w-4xl text-[42px] font-black leading-[0.98] tracking-normal text-white sm:text-[64px] lg:text-[78px]">
+              Sua próxima conta está aqui
+            </h1>
+            <p ref={subtitleRef} className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+              Encontre contas com itens raros, passes antigos, armas evolutivas e muito mais.
+            </p>
 
-          <motion.div variants={heroItem} className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={() => onNavigate('explore')}
-              className="acc-button-primary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5"
-            >
-              Explorar contas
-              <ChevronRight aria-hidden="true" className="size-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('sell')}
-              className="acc-button-secondary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5"
-            >
-              <Store aria-hidden="true" className="size-4" />
-              Quero vender minha conta
-            </button>
-          </motion.div>
+            <div ref={buttonsRef} className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => onNavigate('explore')}
+                className="acc-button-primary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5"
+              >
+                Explorar contas
+                <ChevronRight aria-hidden="true" className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('sell')}
+                className="acc-button-secondary inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-black transition hover:-translate-y-0.5"
+              >
+                <Store aria-hidden="true" className="size-4" />
+                Quero vender minha conta
+              </button>
+            </div>
 
-          <motion.div variants={heroItem} className="mt-8 grid max-w-xl grid-cols-3 gap-3">
-            <MiniMetric value="4+" label="perfis de conta" />
-            <MiniMetric value="Pix" label="pagamento claro" />
-            <MiniMetric value="24h" label="suporte ágil" />
-          </motion.div>
-        </motion.div>
+            <div ref={metricsRef} className="mt-8 grid max-w-xl grid-cols-3 gap-3">
+              <MiniMetric value="4+" label="perfis de conta" />
+              <MiniMetric value="Pix" label="pagamento claro" />
+              <MiniMetric value="24h" label="suporte ágil" />
+            </div>
+          </div>
 
-        <HeroAccountShowcase />
+          <HeroAccountShowcase
+            cardRef={accountCardRef}
+            scannerRef={scannerRef}
+            tagRefs={tagRefs}
+            verifiedRef={verifiedRef}
+          />
+        </div>
       </div>
     </section>
   )
 }
 
-function HeroAccountShowcase() {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const reducedMotion = useReducedMotion()
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start 70%', 'end 20%'],
-  })
-  const cardY = useTransform(scrollYProgress, [0, 1], reducedMotion ? [0, 0] : [18, -4])
-  const cardScale = useTransform(scrollYProgress, [0, 0.65, 1], reducedMotion ? [1, 1, 1] : [0.98, 1, 1.01])
-
+function HeroAccountShowcase({
+  cardRef,
+  verifiedRef,
+  scannerRef,
+  tagRefs,
+}: {
+  cardRef: RefObject<HTMLDivElement | null>
+  verifiedRef: RefObject<HTMLDivElement | null>
+  scannerRef: RefObject<HTMLSpanElement | null>
+  tagRefs: MutableRefObject<HTMLSpanElement[]>
+}) {
   return (
-    <div ref={containerRef} className="relative min-h-[520px] lg:min-h-[620px]">
-      <motion.div
-        style={{ y: cardY, scale: cardScale }}
-        initial={{ opacity: 0, scale: 0.96, y: 18 }}
-        animate={{ opacity: 1, rotateX: 0, rotateY: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.12 }}
+    <div className="relative min-h-[520px] lg:min-h-[620px]">
+      <div
+        ref={cardRef}
         className="group/home-card relative mx-auto max-w-[430px] rounded-[28px] border border-blue-300/18 bg-[linear-gradient(145deg,rgba(16,24,39,0.78),rgba(7,11,22,0.94))] p-4 shadow-[0_28px_90px_rgba(20,99,255,0.14)] backdrop-blur-xl transition duration-500 hover:border-blue-300/34 hover:shadow-[0_34px_110px_rgba(20,99,255,0.2)]"
       >
         <div className="absolute -inset-px rounded-[28px] bg-[linear-gradient(120deg,rgba(56,189,248,0.16),transparent_34%,rgba(34,197,94,0.12)_76%,rgba(139,92,246,0.1))] opacity-70 blur-[1px]" />
@@ -188,16 +247,14 @@ function HeroAccountShowcase() {
           <div className="relative aspect-[4/5] overflow-hidden">
             <img src="/assets/accstore/card-rare.png" alt="Card visual de conta Free Fire verificada" className="size-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#070B16] via-[#070B16]/22 to-transparent" />
-            <span className="acc-home-scanner" aria-hidden="true" />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: -4 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: 'easeOut', delay: 0.75 }}
+            <span ref={scannerRef} className="acc-home-scanner scanner-line" aria-hidden="true" />
+            <div
+              ref={verifiedRef}
               className="absolute right-4 top-4 inline-flex min-h-10 items-center gap-2 rounded-full border border-emerald-300/24 bg-emerald-400/14 px-3 text-xs font-black text-emerald-100 backdrop-blur"
             >
               <BadgeCheck aria-hidden="true" className="size-4" />
               Verificado
-            </motion.div>
+            </div>
           </div>
 
           <div className="space-y-4 p-4">
@@ -221,16 +278,16 @@ function HeroAccountShowcase() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {heroTags.map((tag, index) => (
-        <motion.span
+        <span
           key={tag}
-          variants={fadeSoft}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.6 }}
-          transition={{ duration: 0.55, delay: 0.12 + index * 0.06 }}
+          ref={(node) => {
+            if (node) {
+              tagRefs.current[index] = node
+            }
+          }}
           className={cn(
             'acc-home-float absolute hidden rounded-full border px-3 py-2 text-xs font-black shadow-[0_14px_34px_rgba(0,0,0,0.2)] backdrop-blur md:inline-flex',
             index % 3 === 0 && 'border-blue-300/24 bg-blue-500/14 text-blue-100',
@@ -247,7 +304,7 @@ function HeroAccountShowcase() {
           style={{ animationDelay: `${index * 0.45}s` }}
         >
           {tag}
-        </motion.span>
+        </span>
       ))}
 
       <div className="mt-4 flex flex-wrap justify-center gap-2 md:hidden">
