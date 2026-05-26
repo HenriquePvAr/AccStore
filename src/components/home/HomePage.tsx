@@ -47,7 +47,29 @@ const homeAssets = {
   evolutiveSmg: '/assets/accstore/home/evolutive-smg-clean.png',
 }
 
-const heroTags = ['Itens raros', 'Bandeirão', 'Armas evolutivas', 'Contas antigas', 'Vendedor verificado']
+const iconAssets = {
+  contasAntigas: '/assets/icons/icon-contas-antigas.svg',
+  pix: '/assets/icons/icon-pix.svg',
+  suporte: '/assets/icons/icon-suporte.svg',
+  itensRaros: '/assets/icons/icon-itens-raros.svg',
+  bandeirao: '/assets/icons/icon-bandeirao.svg',
+  armasEvolutivas: '/assets/icons/icon-armas-evolutivas.svg',
+  vendedorVerificado: '/assets/icons/icon-vendedor-verificado.svg',
+}
+
+const miniMetrics = [
+  { value: 'Contas antigas', iconSrc: iconAssets.contasAntigas },
+  { value: 'Pix facilitado', iconSrc: iconAssets.pix },
+  { value: 'Suporte rápido', iconSrc: iconAssets.suporte },
+]
+
+const heroTags = [
+  { label: 'Itens raros', iconSrc: iconAssets.itensRaros, tone: 'purple' },
+  { label: 'Bandeirão', iconSrc: iconAssets.bandeirao, tone: 'gold' },
+  { label: 'Armas evolutivas', iconSrc: iconAssets.armasEvolutivas, tone: 'cyan' },
+  { label: 'Contas antigas', iconSrc: iconAssets.contasAntigas, tone: 'gold' },
+  { label: 'Vendedor verificado', iconSrc: iconAssets.vendedorVerificado, tone: 'green' },
+] as const
 
 const premiumAccountItems = [
   { label: 'Calça Angelical Branca', src: homeAssets.angelicalPants, imageClassName: 'max-h-44 sm:max-h-56' },
@@ -276,8 +298,8 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
   return (
     <section ref={heroRef} className="relative min-h-[calc(100svh-3.5rem)] overflow-hidden bg-[#05070F]">
       <img src={homeAssets.heroBackground} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover object-center opacity-100 brightness-[1.08] contrast-[1.08] saturate-[1.18]" />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,5,11,0.5)_0%,rgba(3,5,11,0.2)_42%,rgba(3,5,11,0.04)_70%,rgba(3,5,11,0.22)_100%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,11,0.06),rgba(3,5,11,0)_48%,rgba(5,7,15,0.7)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,5,11,0.44)_0%,rgba(3,5,11,0.16)_42%,rgba(3,5,11,0.02)_70%,rgba(3,5,11,0.18)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,11,0.03),rgba(3,5,11,0)_48%,rgba(5,7,15,0.62)_100%)]" />
       <div ref={blueGlowRef} className="absolute -left-36 top-5 h-[540px] w-[540px] rounded-full bg-blue-500/14 blur-[96px]" />
       <div ref={greenGlowRef} className="absolute right-[-120px] top-28 h-[360px] w-[360px] rounded-full bg-emerald-400/10 blur-[90px]" />
       <div ref={shapeRef} className="absolute right-[18%] top-[18%] hidden h-44 w-44 rotate-12 rounded-[44px] border border-yellow-300/12 bg-white/[0.025] blur-[0.2px] lg:block" />
@@ -291,7 +313,7 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
             <Sparkles aria-hidden="true" className="size-3.5" />
             Contas antigas e itens raros
           </span>
-          <h1 ref={titleRef} aria-label="Sua próxima conta está aqui" className="mt-5 max-w-4xl text-[50px] font-black leading-[0.86] tracking-normal text-white drop-shadow-[0_12px_38px_rgba(0,0,0,0.62)] sm:text-[78px] lg:text-[96px] xl:text-[112px]">
+          <h1 ref={titleRef} aria-label="Sua próxima conta está aqui" className="mt-5 max-w-4xl text-[52px] font-black leading-[0.84] tracking-normal text-white drop-shadow-[0_12px_38px_rgba(0,0,0,0.68)] sm:text-[80px] lg:text-[100px] xl:text-[116px]">
             <span aria-hidden="true" className="block">Sua próxima</span>
             <span aria-hidden="true" className="acc-home-title-brush -my-2 block text-[1.38em] leading-[0.76] sm:-my-3">conta</span>
             <span aria-hidden="true" className="block">está aqui</span>
@@ -320,9 +342,9 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
           </div>
 
           <div ref={metricsRef} className="mt-8 grid max-w-xl grid-cols-1 gap-3 min-[440px]:grid-cols-3">
-            <MiniMetric icon={Trophy} value="Contas antigas" />
-            <MiniMetric icon={Sparkles} value="Pix facilitado" />
-            <MiniMetric icon={MessageCircle} value="Suporte rápido" />
+            {miniMetrics.map((metric) => (
+              <MiniMetric key={metric.value} iconSrc={metric.iconSrc} value={metric.value} />
+            ))}
           </div>
         </div>
 
@@ -352,14 +374,14 @@ function HeroAccountShowcase({
     <div className="relative min-h-[620px] lg:min-h-[760px]">
       <div
         ref={cardRef}
-        className="group/home-card relative mx-auto w-full max-w-[720px] overflow-hidden rounded-[32px] border border-fuchsia-400/75 bg-[linear-gradient(145deg,rgba(7,10,20,0.9),rgba(2,5,12,0.99))] shadow-[0_0_0_1px_rgba(250,204,21,0.42),0_0_34px_rgba(250,204,21,0.2),0_0_72px_rgba(168,85,247,0.56),0_34px_130px_rgba(0,0,0,0.68)] backdrop-blur-xl transition duration-500 hover:border-yellow-300/80 hover:shadow-[0_0_0_1px_rgba(250,204,21,0.62),0_0_46px_rgba(250,204,21,0.25),0_0_86px_rgba(168,85,247,0.62),0_38px_140px_rgba(0,0,0,0.74)]"
+        className="group/home-card relative mx-auto w-full max-w-[720px] overflow-hidden rounded-[32px] border border-fuchsia-400/75 bg-[linear-gradient(145deg,rgba(7,10,20,0.9),rgba(2,5,12,0.99))] shadow-[0_0_0_1px_rgba(250,204,21,0.42),0_0_34px_rgba(250,204,21,0.2),0_0_78px_rgba(168,85,247,0.62),0_34px_130px_rgba(0,0,0,0.68)] backdrop-blur-xl transition duration-500 before:pointer-events-none before:absolute before:inset-0 before:z-10 before:rounded-[32px] before:bg-[linear-gradient(90deg,rgba(217,70,239,0.45),transparent_18%,transparent_80%,rgba(251,146,60,0.55)),linear-gradient(180deg,rgba(217,70,239,0.22),transparent_20%)] before:opacity-80 hover:border-yellow-300/80 hover:shadow-[0_0_0_1px_rgba(250,204,21,0.62),0_0_48px_rgba(250,204,21,0.3),0_0_96px_rgba(168,85,247,0.72),0_38px_140px_rgba(0,0,0,0.74)]"
       >
         <span ref={scannerRef} className="acc-home-scanner scanner-line" aria-hidden="true" />
         <span ref={shineRef} className="acc-home-card-shine" aria-hidden="true" />
         <div className="relative overflow-hidden rounded-[31px] bg-[linear-gradient(180deg,#050912,#02050c)]">
-          <div className="relative h-[220px] overflow-hidden border-b border-violet-300/24 sm:h-[290px] xl:h-[320px]">
+          <div className="relative h-[230px] overflow-hidden border-b border-violet-300/24 sm:h-[300px] xl:h-[330px]">
             <img src={homeAssets.cardBanner} alt="" aria-hidden="true" className="h-full w-full object-cover object-center brightness-[1.08] contrast-[1.08] saturate-[1.14]" />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,11,0),rgba(3,5,11,0.26)),linear-gradient(90deg,rgba(124,58,237,0.12),transparent_44%,rgba(250,204,21,0.1))]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,11,0),rgba(3,5,11,0.18)),linear-gradient(90deg,rgba(124,58,237,0.08),transparent_44%,rgba(250,204,21,0.07))]" />
             <p className="absolute left-5 top-4 rounded-br-2xl border-b border-r border-violet-300/28 bg-black/48 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-fuchsia-200 backdrop-blur sm:left-6 sm:text-sm">
               CONTA FF VERIFICADA
             </p>
@@ -367,7 +389,7 @@ function HeroAccountShowcase({
               ref={verifiedRef}
               className="absolute right-4 top-4 inline-flex min-h-9 items-center gap-2 rounded-full border border-emerald-300/28 bg-black/58 px-3 text-xs font-black text-emerald-100 shadow-[0_0_24px_rgba(34,197,94,0.24)] backdrop-blur sm:right-5"
             >
-              <BadgeCheck aria-hidden="true" className="size-4" />
+              <img src={iconAssets.vendedorVerificado} alt="" aria-hidden="true" className="size-5" />
               Verificado
             </div>
           </div>
@@ -395,8 +417,19 @@ function HeroAccountShowcase({
 
             <div className="relative grid grid-cols-1 gap-2 min-[520px]:grid-cols-2">
               {heroTags.map((tag, index) => (
-                <span key={tag} className={cn('rounded-xl border border-white/10 bg-[#081525]/78 px-3 py-2 text-xs font-black text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition duration-300 hover:scale-[1.02] hover:border-yellow-300/32', index === heroTags.length - 1 && 'min-[520px]:col-span-2')}>
-                  {tag}
+                <span
+                  key={tag.label}
+                  className={cn(
+                    'flex min-h-11 items-center gap-3 rounded-xl border bg-[#081525]/78 px-3 py-2 text-xs font-black text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition duration-300 hover:scale-[1.02]',
+                    tag.tone === 'purple' && 'border-violet-300/22 hover:border-violet-300/48',
+                    tag.tone === 'gold' && 'border-yellow-300/22 hover:border-yellow-300/48',
+                    tag.tone === 'cyan' && 'border-cyan-300/22 hover:border-cyan-300/48',
+                    tag.tone === 'green' && 'border-emerald-300/22 bg-emerald-500/10 text-emerald-100 hover:border-emerald-300/48',
+                    index === heroTags.length - 1 && 'min-[520px]:col-span-2',
+                  )}
+                >
+                  <img src={tag.iconSrc} alt="" aria-hidden="true" className="size-6 shrink-0" />
+                  {tag.label}
                 </span>
               ))}
             </div>
@@ -678,12 +711,12 @@ function SectionHeader({ eyebrow, title, description, action }: { eyebrow: strin
   )
 }
 
-function MiniMetric({ value, label, icon: Icon }: { value: string; label?: string; icon?: LucideIcon }) {
+function MiniMetric({ value, label, iconSrc }: { value: string; label?: string; iconSrc?: string }) {
   return (
-    <div className="flex min-h-20 items-center gap-3 rounded-2xl border border-white/10 bg-black/28 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur">
-      {Icon ? (
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-yellow-300/20 bg-yellow-400/10 text-yellow-300">
-          <Icon aria-hidden="true" className="size-5" />
+    <div className="group/metric flex min-h-24 items-center gap-3 rounded-2xl border border-white/14 bg-black/34 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_38px_rgba(0,0,0,0.24)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-yellow-300/34 hover:bg-white/[0.055]">
+      {iconSrc ? (
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/28 transition duration-300 group-hover/metric:scale-[1.04]">
+          <img src={iconSrc} alt="" aria-hidden="true" className="size-10" />
         </span>
       ) : null}
       <p className={cn('font-black leading-tight text-white', label ? 'text-xl' : 'text-sm sm:text-base')}>{value}</p>

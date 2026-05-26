@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
+  <defs>
+    <filter id="cyanGlow" x="-35%" y="-35%" width="170%" height="170%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 .1 0 0 0 0 .9 0 0 .9 0 1 0 0 1 0 0 0 .9 0"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="cyan" x1="17" y1="15" x2="80" y2="81" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#65F7FF"/>
+      <stop offset=".52" stop-color="#12D7EA"/>
+      <stop offset="1" stop-color="#00A6FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="7" y="7" width="82" height="82" rx="20" stroke="url(#cyan)" stroke-opacity=".42"/>
+  <g filter="url(#cyanGlow)" fill="url(#cyan)">
+    <rect x="22" y="22" width="22" height="22" rx="5" transform="rotate(45 33 33)"/>
+    <rect x="52" y="22" width="22" height="22" rx="5" transform="rotate(45 63 33)"/>
+    <rect x="22" y="52" width="22" height="22" rx="5" transform="rotate(45 33 63)"/>
+    <rect x="52" y="52" width="22" height="22" rx="5" transform="rotate(45 63 63)"/>
+  </g>
+</svg>

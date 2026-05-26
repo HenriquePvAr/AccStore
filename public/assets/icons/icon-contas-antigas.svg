@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
+  <defs>
+    <filter id="goldGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 1 0 .76 0 0 .58 0 0 .12 0 0 0 0 0 .8 0"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="gold" x1="16" y1="14" x2="78" y2="86" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF27A"/>
+      <stop offset=".44" stop-color="#FFC400"/>
+      <stop offset="1" stop-color="#FF8A00"/>
+    </linearGradient>
+  </defs>
+  <rect x="7" y="7" width="82" height="82" rx="20" stroke="url(#gold)" stroke-opacity=".42"/>
+  <path filter="url(#goldGlow)" d="M29 23h38v12c0 13-7.4 23-19 23S29 48 29 35V23Z" stroke="url(#gold)" stroke-width="5" stroke-linejoin="round"/>
+  <path filter="url(#goldGlow)" d="M31 30H18v6c0 8 5.7 14 14 14M65 30h13v6c0 8-5.7 14-14 14M48 58v11M35 78h26M41 69h14" stroke="url(#gold)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path filter="url(#goldGlow)" d="m48 32 3.4 6.7 7.4 1.1-5.4 5.1 1.3 7.3L48 48.7l-6.7 3.5 1.3-7.3-5.4-5.1 7.4-1.1L48 32Z" fill="url(#gold)"/>
+</svg>
