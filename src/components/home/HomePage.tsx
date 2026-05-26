@@ -39,28 +39,41 @@ type ShowcaseAccount = {
   accent: 'blue' | 'emerald' | 'violet' | 'cyan'
 }
 
-const heroTags = ['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Conta veterana', 'Vendedor verificado']
+const homeAssets = {
+  heroBackground: '/assets/accstore/home/hero-battle-royale-bg.png',
+  angelicalPants: '/assets/accstore/home/angelical-pants.png',
+  bandeirao: '/assets/accstore/home/bandeirao.png',
+  evolutiveSmg: '/assets/accstore/home/evolutive-smg.png',
+}
+
+const heroTags = ['Itens raros', 'Bandeirão', 'Armas evolutivas', 'Contas antigas', 'Vendedor verificado']
+
+const premiumAccountItems = [
+  { label: 'Calça Angelical Branca', src: homeAssets.angelicalPants },
+  { label: 'Bandeirão', src: homeAssets.bandeirao },
+  { label: 'Arma evolutiva', src: homeAssets.evolutiveSmg },
+]
 
 const showcaseAccounts: ShowcaseAccount[] = [
-  { title: 'Conta FF com itens raros', price: 379.9, tags: ['Itens raros', 'Patente alta', 'Verificado'], accent: 'blue' },
-  { title: 'Conta FF com passes antigos', price: 289.9, tags: ['Passe antigo', 'Conta veterana', 'Seguro'], accent: 'emerald' },
-  { title: 'Conta FF com arma evolutiva', price: 449.9, tags: ['Arma evolutiva', 'Itens raros', 'Verificado'], accent: 'violet' },
-  { title: 'Conta FF veterana', price: 229.9, tags: ['Conta veterana', 'Boa região', 'Oferta recente'], accent: 'cyan' },
+  { title: 'Conta FF com itens raros', price: 379.9, tags: ['Itens raros', 'Bandeirão', 'Verificado'], accent: 'blue' },
+  { title: 'Conta FF com bandeirão', price: 289.9, tags: ['Bandeirão', 'Contas antigas', 'Seguro'], accent: 'emerald' },
+  { title: 'Conta FF com arma evolutiva', price: 449.9, tags: ['Armas evolutivas', 'Itens raros', 'Verificado'], accent: 'violet' },
+  { title: 'Conta FF antiga com itens raros', price: 229.9, tags: ['Contas antigas', 'Itens raros', 'Oferta recente'], accent: 'cyan' },
 ]
 
 const trustCards: Array<{ icon: LucideIcon; title: string; description: string }> = [
   { icon: ShieldCheck, title: 'Vendedores verificados', description: 'Perfis com sinais claros de confiança para negociar com mais tranquilidade.' },
-  { icon: Filter, title: 'Filtros por preço, itens e patente', description: 'Encontre contas por faixa de valor, raridade, estilo de jogo e evolução.' },
+  { icon: Filter, title: 'Filtros por preço e itens', description: 'Encontre contas por faixa de valor, raridade, estilo de conta e itens especiais.' },
   { icon: Tags, title: 'Contas organizadas', description: 'Cards objetivos, status legíveis e informações principais sem excesso de texto.' },
   { icon: Zap, title: 'Atendimento rápido', description: 'Fluxos diretos para comprar, vender e tirar dúvidas quando precisar.' },
   { icon: Smartphone, title: 'Experiência mobile', description: 'Interface pensada para navegar, comparar e chamar no WhatsApp pelo celular.' },
   { icon: Gamepad2, title: 'Foco em contas gamer', description: 'Uma vitrine feita para contas de Free Fire e outros jogos, com linguagem do mercado.' },
 ]
 
-const categories = ['Itens raros', 'Passes antigos', 'Armas evolutivas', 'Contas veteranas', 'Patentes altas', 'Ofertas recentes']
+const categories = ['Itens raros', 'Bandeirão', 'Armas evolutivas', 'Contas antigas', 'Vendedor verificado', 'Ofertas recentes']
 
 const steps: Array<{ icon: LucideIcon; title: string; text: string }> = [
-  { icon: ShoppingBag, title: 'Escolha sua conta', text: 'Veja itens, passes, patente, preço e vendedor.' },
+  { icon: ShoppingBag, title: 'Escolha sua conta', text: 'Veja itens, bandeirão, preço e vendedor.' },
   { icon: MessageCircle, title: 'Fale com o vendedor', text: 'Tire dúvidas e combine a compra de forma simples.' },
   { icon: ShieldCheck, title: 'Receba com segurança', text: 'Finalize a negociação com mais confiança e praticidade.' },
 ]
@@ -170,18 +183,18 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
         const buttons = buttonItems()
         const tags = tagItems()
 
-        gsap.set([eyebrowRef.current, titleRef.current, subtitleRef.current], { opacity: 0, y: 60, filter: 'blur(8px)' })
+        gsap.set([eyebrowRef.current, titleRef.current, subtitleRef.current], { opacity: 1, y: 0, filter: 'blur(0px)' })
         gsap.set(buttonsRef.current, { opacity: 1, filter: 'blur(0px)' })
-        gsap.set(buttons, { opacity: 0, y: 26, filter: 'blur(6px)' })
-        gsap.set(metricsRef.current, { opacity: 0, y: 30, filter: 'blur(8px)' })
+        gsap.set(buttons, { opacity: 1, y: 0, filter: 'blur(0px)' })
+        gsap.set(metricsRef.current, { opacity: 1, y: 0, filter: 'blur(0px)' })
         gsap.set(accountCardRef.current, {
-          opacity: 0,
-          x: 72,
-          y: 80,
+          opacity: 0.88,
+          x: 20,
+          y: 24,
           rotateX: 8,
           rotateY: -5,
-          scale: 0.86,
-          filter: 'blur(8px)',
+          scale: 0.96,
+          filter: 'blur(0px)',
           transformOrigin: 'center center',
           transformPerspective: 900,
         })
@@ -276,7 +289,9 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
 
   return (
     <section ref={heroRef} className="relative min-h-[calc(100svh-3.5rem)] overflow-hidden bg-[#05070F]">
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,#071121,#05070F_60%,#05070F)]" />
+      <img src={homeAssets.heroBackground} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover opacity-85" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,7,15,0.94)_0%,rgba(5,7,15,0.64)_44%,rgba(5,7,15,0.34)_72%,rgba(5,7,15,0.72)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,7,15,0.22),rgba(5,7,15,0.12)_52%,#05070F_100%)]" />
       <div ref={blueGlowRef} className="absolute -left-40 top-6 h-[520px] w-[520px] rounded-full bg-blue-500/24 blur-[96px]" />
       <div ref={greenGlowRef} className="absolute right-[-120px] top-28 h-[360px] w-[360px] rounded-full bg-emerald-400/16 blur-[90px]" />
       <div ref={shapeRef} className="absolute right-[18%] top-[18%] hidden h-44 w-44 rotate-12 rounded-[44px] border border-blue-300/12 bg-white/[0.025] blur-[0.2px] lg:block" />
@@ -284,17 +299,19 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
       <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/30 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#05070F] to-transparent" />
 
-      <div className="relative mx-auto grid min-h-[calc(100svh-3.5rem)] w-full max-w-7xl items-center gap-10 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,0.92fr)_minmax(420px,1fr)] lg:px-7">
+      <div className="relative mx-auto grid min-h-[calc(100svh-3.5rem)] w-full max-w-7xl items-center gap-10 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(480px,1fr)] lg:px-7">
         <div className="max-w-3xl">
           <span ref={eyebrowRef} className="inline-flex min-h-8 items-center gap-2 rounded-full border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-black uppercase tracking-[0.12em] text-blue-200">
             <Sparkles aria-hidden="true" className="size-3.5" />
-            Marketplace gamer premium
+            Contas antigas e itens raros
           </span>
-          <h1 ref={titleRef} className="mt-5 max-w-4xl text-[42px] font-black leading-[0.98] tracking-normal text-white sm:text-[66px] lg:text-[82px]">
-            Sua próxima conta está aqui
+          <h1 ref={titleRef} aria-label="Sua próxima conta está aqui" className="mt-5 max-w-4xl text-[42px] font-black leading-[0.98] tracking-normal text-white sm:text-[66px] lg:text-[82px]">
+            <span aria-hidden="true" className="block">Sua próxima</span>
+            <span aria-hidden="true" className="acc-home-title-brush block">conta</span>
+            <span aria-hidden="true" className="block">está aqui</span>
           </h1>
           <p ref={subtitleRef} className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-            Encontre contas com itens raros, passes antigos, armas evolutivas e muito mais.
+            Encontre contas com itens raros, bandeirão, armas evolutivas e muito mais.
           </p>
 
           <div ref={buttonsRef} className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -317,9 +334,9 @@ function HeroSection({ onNavigate }: { onNavigate: (view: AppView) => void }) {
           </div>
 
           <div ref={metricsRef} className="mt-8 grid max-w-xl grid-cols-3 gap-3">
-            <MiniMetric value="4" label="perfis em destaque" />
-            <MiniMetric value="Pix" label="pagamento claro" />
-            <MiniMetric value="24h" label="atendimento ágil" />
+            <MiniMetric value="Contas antigas" />
+            <MiniMetric value="Pix facilitado" />
+            <MiniMetric value="Suporte rápido" />
           </div>
         </div>
 
@@ -352,7 +369,7 @@ function HeroAccountShowcase({
     <div className="relative min-h-[520px] lg:min-h-[640px]">
       <div
         ref={cardRef}
-        className="group/home-card relative mx-auto max-w-[440px] overflow-hidden rounded-[28px] border border-blue-300/18 bg-[linear-gradient(145deg,rgba(16,24,39,0.82),rgba(7,11,22,0.96))] p-4 shadow-[0_28px_90px_rgba(20,99,255,0.16)] backdrop-blur-xl transition duration-500 hover:border-blue-300/34 hover:shadow-[0_34px_110px_rgba(20,99,255,0.22)]"
+        className="group/home-card relative mx-auto max-w-[520px] overflow-hidden rounded-[28px] border border-blue-300/18 bg-[linear-gradient(145deg,rgba(16,24,39,0.82),rgba(7,11,22,0.96))] p-4 shadow-[0_28px_90px_rgba(20,99,255,0.16)] backdrop-blur-xl transition duration-500 hover:border-blue-300/34 hover:shadow-[0_34px_110px_rgba(20,99,255,0.22)]"
       >
         <span ref={scannerRef} className="acc-home-scanner scanner-line" aria-hidden="true" />
         <span ref={shineRef} className="acc-home-card-shine" aria-hidden="true" />
@@ -360,7 +377,7 @@ function HeroAccountShowcase({
           <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(56,189,248,0.1),transparent_34%,rgba(34,197,94,0.08)),linear-gradient(180deg,rgba(255,255,255,0.045),transparent)]" />
           <div className="relative space-y-5 p-5">
             <div className="flex items-center justify-between gap-4">
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-blue-300">Conta FF Verificada</p>
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-blue-300">CONTA FF VERIFICADA</p>
               <div
                 ref={verifiedRef}
                 className="inline-flex min-h-9 items-center gap-2 rounded-full border border-emerald-300/24 bg-emerald-400/14 px-3 text-xs font-black text-emerald-100 backdrop-blur"
@@ -371,31 +388,21 @@ function HeroAccountShowcase({
             </div>
 
             <div>
-              <h2 className="text-2xl font-black leading-tight text-white">Conta com perfil premium</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-400">Vitrine visual para contas com bom histórico, itens raros e negociação organizada.</p>
+              <h2 className="text-2xl font-black leading-tight text-white">Conta antiga com itens raros</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-400">Itens raros, bandeirão e armas evolutivas em um perfil organizado.</p>
             </div>
 
             <div className="relative overflow-hidden rounded-2xl border border-blue-300/14 bg-[#09111f] p-4">
-              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(56,189,248,0.08),transparent_42%,rgba(34,197,94,0.08))]" />
-              <div className="relative grid gap-3">
-                <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Patente</p>
-                    <p className="mt-1 text-lg font-black text-white">Alta</p>
-                  </div>
-                  <div className="h-10 w-28 overflow-hidden rounded-full border border-emerald-300/18 bg-emerald-400/10">
-                    <div className="h-full w-[78%] rounded-full bg-gradient-to-r from-blue-400 to-emerald-300 opacity-80" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  {['Raros', 'Passes', 'Evolutivas'].map((label) => (
-                    <div key={label} className="rounded-xl border border-white/10 bg-white/[0.04] p-3 text-center">
-                      <p className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-400">{label}</p>
-                      <p className="mt-2 text-xl font-black text-white">✓</p>
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(56,189,248,0.08),transparent_42%,rgba(250,204,21,0.08)),radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.16),transparent_44%)]" />
+              <div className="relative grid grid-cols-3 gap-2">
+                {premiumAccountItems.map((item) => (
+                  <div key={item.label} className="rounded-xl border border-white/10 bg-white/[0.045] p-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                    <div className="flex h-20 items-center justify-center rounded-lg bg-black/18 p-1 sm:h-28">
+                      <img src={item.src} alt={item.label} className="max-h-full max-w-full object-contain drop-shadow-[0_16px_28px_rgba(0,0,0,0.42)]" />
                     </div>
-                  ))}
-                </div>
+                    <p className="mt-2 min-h-10 text-[10px] font-black leading-4 text-slate-200 sm:text-[11px]">{item.label}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -529,7 +536,7 @@ function ShowcaseAccountCard({
           <div className="mt-10 h-2 w-3/4 rounded-full bg-white/18" />
           <div className="mt-3 h-2 w-1/2 rounded-full bg-white/10" />
           <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2">
-            {['Itens', 'Passe', 'Seguro'].map((tag) => (
+            {['Itens', 'Bandeirão', 'Seguro'].map((tag) => (
               <span key={tag} className="rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-center text-[10px] font-black text-slate-200">
                 {tag}
               </span>
@@ -679,7 +686,7 @@ function FinalCta({ onNavigate }: { onNavigate: (view: AppView) => void }) {
         </span>
         <h2 className="mt-5 text-3xl font-black text-white sm:text-5xl">Pronto para encontrar sua próxima conta?</h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-          Explore contas com itens raros, passes antigos, armas evolutivas e vendedores verificados.
+          Explore contas com itens raros, bandeirão, armas evolutivas e vendedores verificados.
         </p>
         <button type="button" onClick={() => onNavigate('explore')} className="acc-button-primary mt-7 inline-flex min-h-12 items-center gap-2 px-7 text-sm font-black transition duration-300 hover:-translate-y-0.5 active:scale-[0.98]">
           Explorar contas
@@ -719,11 +726,11 @@ function SectionHeader({ eyebrow, title, description, action }: { eyebrow: strin
   )
 }
 
-function MiniMetric({ value, label }: { value: string; label: string }) {
+function MiniMetric({ value, label }: { value: string; label?: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-      <p className="text-xl font-black text-white">{value}</p>
-      <p className="mt-1 text-xs font-semibold text-slate-500">{label}</p>
+      <p className={cn('font-black leading-tight text-white', label ? 'text-xl' : 'text-sm sm:text-base')}>{value}</p>
+      {label ? <p className="mt-1 text-xs font-semibold text-slate-500">{label}</p> : null}
     </div>
   )
 }
